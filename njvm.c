@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string.h>
+
 #define VERSION 0.1
 
 int main(int argc, char *argv[]) {
@@ -8,7 +9,7 @@ int main(int argc, char *argv[]) {
     {
         if(strcmp(argv[i], "--version"))
         {
-            printf("Version: %c",VERSION);
+            printf("Version: %f",VERSION);
         }
         else if(strcmp(argv[i], "--help"))
         {
@@ -18,7 +19,8 @@ int main(int argc, char *argv[]) {
         }
         else
         {
-            printf("unknown command line argument '%c', try './njvm --help'\n", argv[i]);
+            printf("unknown command line argument '%s', try './njvm --help'\n", argv[i]);
+            printf("nice");
         }
     }
     return 0;
