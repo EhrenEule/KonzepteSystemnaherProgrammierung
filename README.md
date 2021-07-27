@@ -1,5 +1,7 @@
 # KonzepteSystemnaherProgrammierung
 
+gcc -g -Wall -std=c99 -pedantic
+
 Aufgabe 0:
 Aufgabe 1:
 Aufgabe 2:
