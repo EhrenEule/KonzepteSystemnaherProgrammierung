@@ -21,3 +21,5 @@ $ gdb ./a.out
 <segfault happens here>
 (gdb) backtrace
 <offending code is shown here>
+
+autosave test

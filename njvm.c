@@ -28,7 +28,6 @@ bool halt;
 
 int main(int argc, char *argv[]) {
 
-    printf("moce");
     halt=true;
     for(int i=1; i< argc; i++)
 
