@@ -11,3 +11,13 @@ Aufgabe 5:
 Aufgabe 6:
 Aufgabe 7:
 Aufgabe 8:
+
+
+gcc program.c -g
+Then use gdb:
+
+$ gdb ./a.out
+(gdb) run
+<segfault happens here>
+(gdb) backtrace
+<offending code is shown here>
