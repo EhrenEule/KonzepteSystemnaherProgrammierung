@@ -183,7 +183,6 @@ void execute_instruction(unsigned int instruction)
         int scanned_num;
         printf("Enter Integer: ");
         scanf("%d",&scanned_num);
-        printf("Integer entered: %d", scanned_num);
         stack[stackpointer] = scanned_num;
         stackpointer++;
     } 
@@ -195,10 +194,10 @@ void execute_instruction(unsigned int instruction)
     }
     else if((opcode == RDCHR))
     {
-        char *scanned_char= NULL;
-        printf("Enter Integer: ");
-        scanf("%c",scanned_char);
-        stack[stackpointer] = (uintptr_t)scanned_char;
+        char scanned_char;
+        printf("Enter Char: ");
+        scanf(" %c",&scanned_char);
+        stack[stackpointer] = scanned_char;
         stackpointer++;
     }
     else if((opcode == WRCHR))
