@@ -20,6 +20,7 @@
 
 //size = 100? 
 unsigned int programm_memory[100];
+int programm_size;
 unsigned int instruction;
 int stack[100];
 int stackpointer;
@@ -28,6 +29,7 @@ bool halt;
 
 int main(int argc, char *argv[]) {
 
+    printf("Ninja Virtual Machine started\n");
     halt=true;
     for(int i=1; i< argc; i++)
 
@@ -42,15 +44,11 @@ int main(int argc, char *argv[]) {
             printf("  --version        show version and exit\n");
             printf("  --help           show this help and exit\n");
         }
-        else if(strstr(argv[i], "programm"))
+        else if(strstr(argv[i], "prog"))
         {
             load_programm(argv[i]);
             halt=false;
-            //print programm 1 NUR DEBUG
-            for(int i=0;i<10;i++)
-            {
-                printf("%d", programm_memory[i]);
-            }
+            print_programm();
         }
         else
         {
@@ -63,14 +61,16 @@ int main(int argc, char *argv[]) {
         instruction = programm_memory[programm_counter];
         programm_counter++;
         execute_instruction(instruction);
+        //print_stack();
     }
-
+    
+    printf("Ninja Virtual Machine stopped");
     return 0;
 }
 
 void load_programm(char *programm_ident)
 {
-    if(strcmp(programm_ident,"programm1"))
+    if(strcmp(programm_ident,"prog1") == 0)
     {
         unsigned int programm_instuctions[]= {
             (PUSHC << 24 | IMMEDIATE(3)),
@@ -80,13 +80,15 @@ void load_programm(char *programm_ident)
             (PUSHC << 24 | IMMEDIATE(6)),
             (SUB << 24),
             (MUL << 24), 
+            (WRINT << 24),
             (PUSHC << 24 | IMMEDIATE(10)),
             (WRCHR << 24),
             (HALT << 24),
         };
-        memcpy(programm_memory,programm_instuctions,sizeof(programm_instuctions)/sizeof(programm_instuctions[0]));
+        memcpy(programm_memory,programm_instuctions,sizeof(programm_instuctions));
+        programm_size=11;
     }
-    else if(strcmp(programm_ident,"programm2"))
+    else if(strcmp(programm_ident,"prog2") == 0)
     {
         unsigned int programm_instuctions[]= {
             (PUSHC << 24 | IMMEDIATE(-2)),
@@ -99,9 +101,11 @@ void load_programm(char *programm_ident)
             (WRCHR << 24),
             (HALT << 24),
         };
-        memcpy(programm_memory,programm_instuctions,sizeof(programm_instuctions)/sizeof(programm_instuctions[0]));
+        memcpy(programm_memory,programm_instuctions,sizeof(programm_instuctions));
+        programm_size=9;
     }
-    else if(strcmp(programm_ident,"programm3"))
+
+    else if(strcmp(programm_ident,"prog3") == 0)
     {
         unsigned int programm_instuctions[]= {
             (RDCHR << 24),
@@ -110,7 +114,13 @@ void load_programm(char *programm_ident)
             (WRCHR << 24),
             (HALT << 24),
         };
-        memcpy(programm_memory,programm_instuctions,sizeof(programm_instuctions)/sizeof(programm_instuctions[0]));
+        memcpy(programm_memory,programm_instuctions,sizeof(programm_instuctions));
+        programm_size=5;
+    }
+    else 
+    {
+        printf("Unknown Program.\nExisting now");
+        exit(1);
     }
 
 }
@@ -118,37 +128,42 @@ void load_programm(char *programm_ident)
 void execute_instruction(unsigned int instruction)
 {
     unsigned char opcode = instruction >> 24;
-    int immediate;
-    immediate = instruction & 0x00FFFFFF;
-    if((opcode = HALT))
+
+    if((opcode == HALT))
     {
         halt=true;
     }
-    else if((opcode = PUSHC))
+    else if((opcode == PUSHC))
     {
+        int immediate = IMMEDIATE(instruction);
+        immediate = SIGN_EXTEND(immediate);
         stack[stackpointer] = immediate;
         stackpointer++;
     }
-    else if((opcode = ADD))
+    else if((opcode == ADD))
     {
-        stack[stackpointer-2] = stack[stackpointer-1] + stack[stackpointer-2];
+        stack[stackpointer-2] = stack[stackpointer-2] + stack[stackpointer-1];
+        stack[stackpointer-1] = 0;
         stackpointer--;
     }  
-    else if((opcode = SUB))
+    else if((opcode == SUB))
     {
-        stack[stackpointer-2] = stack[stackpointer-1] - stack[stackpointer-2];
+        stack[stackpointer-2] = stack[stackpointer-2] - stack[stackpointer-1];
+        stack[stackpointer-1] = 0;
         stackpointer--;
     } 
-    else if((opcode = MUL))
+    else if((opcode == MUL))
     {
-        stack[stackpointer-2] = stack[stackpointer-1] * stack[stackpointer-2];
+        stack[stackpointer-2] = stack[stackpointer-2] * stack[stackpointer-1];
+        stack[stackpointer-1] = 0;
         stackpointer--;
     } 
-    else if((opcode = DIV))
+    else if((opcode == DIV))
     {
-        if((stack[stackpointer-2] !=0))
+        if((stack[stackpointer-1] !=0))
         {
-        stack[stackpointer-2] = stack[stackpointer-1] / stack[stackpointer-2];
+        stack[stackpointer-2] = stack[stackpointer-2] / stack[stackpointer-1];
+        stack[stackpointer-1] = 0;
         stackpointer--;
         }
         else
@@ -157,25 +172,28 @@ void execute_instruction(unsigned int instruction)
             exit(1);
         }
     } 
-    else if((opcode = MOD))
+    else if((opcode == MOD))
     {
-        stack[stackpointer-2] = stack[stackpointer-1] % stack[stackpointer-2];
+        stack[stackpointer-2] = stack[stackpointer-2] % stack[stackpointer-1];
+        stack[stackpointer-1] = 0;
         stackpointer--;
     } 
-    else if((opcode = RDINT))
+    else if((opcode == RDINT))
     {
-        int *scanned_num= NULL;
+        int scanned_num;
         printf("Enter Integer: ");
-        scanf("%d",scanned_num);
-        stack[stackpointer] = (uintptr_t)scanned_num;
+        scanf("%d",&scanned_num);
+        printf("Integer entered: %d", scanned_num);
+        stack[stackpointer] = scanned_num;
         stackpointer++;
     } 
-    else if((opcode = WRINT))
+    else if((opcode == WRINT))
     {
-        printf("%d",stack[stackpointer]);
+        printf("%d",stack[stackpointer-1]);
+        stack[stackpointer-1] = 0;
         stackpointer--;
     }
-    else if((opcode = RDCHR))
+    else if((opcode == RDCHR))
     {
         char *scanned_char= NULL;
         printf("Enter Integer: ");
@@ -183,15 +201,81 @@ void execute_instruction(unsigned int instruction)
         stack[stackpointer] = (uintptr_t)scanned_char;
         stackpointer++;
     }
-    else if((opcode = WRCHR))
+    else if((opcode == WRCHR))
     {
-        char wr_char= stack[stackpointer]+ '0';
+        char wr_char= stack[stackpointer-1];
         printf("%c",wr_char);
+        stack[stackpointer-1] = 0;
         stackpointer--;
     } 
+
 }
 
 void print_programm()
 {
+    int counter=0;
+    for(int i=0;i < programm_size;i++ )
+    {
+        unsigned int instruction = programm_memory[i];
+        unsigned char opcode = instruction >> 24;
+        if((opcode == HALT))
+        {
+            printf("%d:\thalt\n", counter);
+        }
+        else if((opcode == PUSHC))
+        {
+            int immediate = IMMEDIATE(instruction);
+            immediate = SIGN_EXTEND(immediate);
+            printf("%d:\tpushc\t%d\n", counter,immediate);
+        }
+        else if((opcode == ADD))
+        {
+            printf("%d:\tadd\n", counter);
+        }
+        else if((opcode == SUB))
+        {
+            printf("%d:\tsub\n", counter);
+        }
+        else if((opcode == MUL))
+        {
+            printf("%d:\tmul\n", counter);
+        }
+        else if((opcode == DIV))
+        {
+            printf("%d:\tdiv\n", counter);
+        }
+        else if((opcode == MOD))
+        {
+            printf("%d:\tmod\n", counter);
+        }
+        else if((opcode == RDINT))
+        {
+            printf("%d:\trdint\n", counter);
+        }
+        else if((opcode == RDCHR))
+        {
+            printf("%d:\trdchar\n", counter);
+        }
+        else if((opcode == WRCHR))
+        {
+            printf("%d:\twrchr\n", counter);
+        }
+        else if((opcode == WRINT))
+        {
+            printf("%d:\twrint\n", counter);
+        }
+        counter++;
+    }
+}
 
+void print_stack()
+{
+    for(int i=0; i < sizeof(stack);i++)
+    {
+        if(stack[i] != 0)
+        {
+        printf("Stackpointer:%d\t%d\n",stackpointer,stack[i]);
+        }
+    }
+    printf("\n");
 }

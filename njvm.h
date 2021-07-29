@@ -16,9 +16,14 @@
 #define WRCHR 10
 
 #define IMMEDIATE(x) ((x) & 0x00FFFFFF)
+#define SIGN_EXTEND(i) ((i) & 0x00800000 ? (i) | 0xFF000000 : (i))
 
 void load_programm(char *programm_ident);
 
 void execute_instruction(unsigned int instruction);
+
+void print_programm();
+
+void print_stack();
 
 #endif
