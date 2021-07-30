@@ -6,18 +6,6 @@
 #include <stdint.h>
 #include <inttypes.h>
 
-
-/*
-* nur vorzeichenlose ganzzahlen rechtsschieben
-*/
-
-
-
-
-//wenn das vor dem Fragezeichen true(1) ist ist i = i | 0xFF000000,
-//falls das vor dem Fragezeichen false(0) ist ist i = i
-//#define SIGN_EXTEND(i) ((i) & 0x00800000 ? (i) | 0xFF000000 : (i))
-
 //size = 100? 
 unsigned int programm_memory[100];
 int programm_size;
@@ -123,6 +111,23 @@ void load_programm(char *programm_ident)
         exit(1);
     }
 
+}
+
+void load_programm_from_File(char *programm_path)
+{
+    //so you only need to give the relative path
+    programm_path = "/Tests/Aufgabe2_Tests/%c", programm_path;
+    //Mode nochmal auschecken
+    FILE *file_managment = fopen(programm_path,'r');
+
+    if(file_managment == NULL)
+    {
+        printf("Error while loading File");
+        exit(1);
+    }
+
+
+    fclose(file_managment);
 }
 
 void execute_instruction(unsigned int instruction)
@@ -268,6 +273,7 @@ void print_programm()
 }
 
 void print_stack()
+
 {
     for(int i=0; i < sizeof(stack);i++)
     {

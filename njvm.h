@@ -26,4 +26,6 @@ void print_programm();
 
 void print_stack();
 
+FILE *fopen(const char *path, const char *mode);
+
 #endif
