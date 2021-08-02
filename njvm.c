@@ -10,7 +10,8 @@
 #include <limits.h>
 
 //size = 100? 
-unsigned int programm_memory[100];
+unsigned int *programm_memory;
+unsigned int *variable_memory;
 int programm_size;
 unsigned int instruction;
 int stack[1000];
@@ -87,17 +88,16 @@ void load_programm_from_File(char *programm_path)
     if(fread( &instruction_count, sizeof(int), 1, file_managment) != 1) {printf("Error, noob"); exit(99); }
     programm_size = instruction_count;
     //Allocate memory for instructions
-    //TODO
-    //programm_memory= malloc(sizeof(int) * instruction_count);
-    //if(programm_memory == NULL) { printf("Error while allocating memory"); exit(99); } 
+    unsigned int *temp_programm_memory= malloc(sizeof(int) * instruction_count);
+    if(temp_programm_memory == NULL) { printf("Error while allocating instruction memory"); exit(99); } 
+    programm_memory = temp_programm_memory;
 
     //Read number of Variables
     int variable_count;
     if(fread( &variable_count, sizeof(int), 1, file_managment) != 1) {printf("Error, noob"); exit(99); }
     //Allocate memory for variables
-    //TODOt
-    //*programm_memory= malloc(sizeof(int) * instruction_count);
-    //if(programm_memory == NULL) { printf("Error while allocating memory"); exit(99); } 
+    unsigned int *temp_variable_memory= malloc(sizeof(int) * variable_count);
+    if(temp_variable_memory == NULL) { printf("Error while allocating variable memory"); exit(99); } 
 
     //Load instructions into programm_memory
     if(fread( &programm_memory[0], sizeof(int), instruction_count, file_managment) != instruction_count) {printf("Error, noob"); exit(99); }
