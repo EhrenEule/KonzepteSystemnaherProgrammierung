@@ -95,7 +95,7 @@ void load_programm_from_File(char *programm_path)
     int variable_count;
     if(fread( &variable_count, sizeof(int), 1, file_managment) != 1) {printf("Error, noob"); exit(99); }
     //Allocate memory for variables
-    //TODO
+    //TODOt
     //*programm_memory= malloc(sizeof(int) * instruction_count);
     //if(programm_memory == NULL) { printf("Error while allocating memory"); exit(99); } 
 
