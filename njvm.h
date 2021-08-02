@@ -1,7 +1,9 @@
 #ifndef NJVM_H
 #define NJVM_H
 
-#define VERSION 0.1
+#include <stdio.h>
+
+#define VERSION 2
 
 #define HALT 0
 #define PUSHC 1
@@ -18,14 +20,14 @@
 #define IMMEDIATE(x) ((x) & 0x00FFFFFF)
 #define SIGN_EXTEND(i) ((i) & 0x00800000 ? (i) | 0xFF000000 : (i))
 
-void load_programm(char *programm_ident);
-
 void execute_instruction(unsigned int instruction);
 
 void print_programm();
 
 void print_stack();
 
-FILE *fopen(const char *path, const char *mode);
+void load_programm_from_File(char *programm_path);
+
+char* concat(const char *s1, const char *s2);
 
 #endif

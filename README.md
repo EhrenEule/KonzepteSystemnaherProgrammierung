@@ -4,7 +4,7 @@ gcc -g -Wall -std=c99 -pedantic
 
 Aufgabe 0: finished
 Aufgabe 1: finished (Bis auf Stacküber- und unterlauf und SIGN_EXTENDED(i) noch verstehen)
-Aufgabe 2:
+Aufgabe 2: executing .bin file doesnt work with hexdump -C
 Aufgabe 3:
 Aufgabe 4:
 Aufgabe 5:
@@ -23,3 +23,6 @@ $ gdb ./a.out
 <segfault happens here>
 (gdb) backtrace
 <offending code is shown here>
+
+Datei ausführbar machen
+chmod +x njvm

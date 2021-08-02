@@ -5,12 +5,15 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <inttypes.h>
+#include <unistd.h>
+#include <stdio.h>
+#include <limits.h>
 
 //size = 100? 
 unsigned int programm_memory[100];
 int programm_size;
 unsigned int instruction;
-int stack[100];
+int stack[1000];
 int stackpointer;
 int programm_counter;
 bool halt;
@@ -19,29 +22,28 @@ int main(int argc, char *argv[]) {
 
     printf("Ninja Virtual Machine started\n");
     halt=true;
-    for(int i=1; i< argc; i++)
-
+    
+    if(strcmp(argv[1], "--version") == 0)
     {
-        if(strcmp(argv[i], "--version") == 0)
-        {
-            printf("Version: %f\n",VERSION);
-        }
-        else if(strcmp(argv[i], "--help") == 0)
-        {
-            printf("usage: ./njvm [option] [option] ...\n");
-            printf("  --version        show version and exit\n");
-            printf("  --help           show this help and exit\n");
-        }
-        else if(strstr(argv[i], "prog"))
-        {
-            load_programm(argv[i]);
-            halt=false;
-            print_programm();
-        }
-        else
-        {
-            printf("unknown command line argument '%s', try './njvm --help'\n", argv[i]);
-        }
+        printf("Version: %d\n",VERSION);
+    }
+    else if(strcmp(argv[1], "--help") == 0)
+    {
+        printf("usage: ./njvm [option] [option] ...\n");
+        printf("  --version        show version and exit\n");
+        printf("  --help           show this help and exit\n");
+    }
+    else if(strstr(argv[1], "prog"))
+    {
+        char relative_programm_path[80] = "/home/student/Desktop/KonzepteSystemnaherProgrammierung/Tests/";
+        strncat(relative_programm_path, argv[1], strlen(argv[1]));
+        load_programm_from_File(relative_programm_path);
+        halt=false;
+        print_programm();
+    }
+    else if(argv[1] != NULL)
+    {
+        printf("unknown command line argument '%s', try './njvm --help'\n", argv[1]);
     }
 
     while(!halt)
@@ -51,81 +53,57 @@ int main(int argc, char *argv[]) {
         execute_instruction(instruction);
         //print_stack();
     }
-    
+
     printf("Ninja Virtual Machine stopped");
     return 0;
 }
 
-void load_programm(char *programm_ident)
-{
-    if(strcmp(programm_ident,"prog1") == 0)
-    {
-        unsigned int programm_instuctions[]= {
-            (PUSHC << 24 | IMMEDIATE(3)),
-            (PUSHC << 24 | IMMEDIATE(4)),
-            (ADD << 24),
-            (PUSHC << 24 | IMMEDIATE(10)),
-            (PUSHC << 24 | IMMEDIATE(6)),
-            (SUB << 24),
-            (MUL << 24), 
-            (WRINT << 24),
-            (PUSHC << 24 | IMMEDIATE(10)),
-            (WRCHR << 24),
-            (HALT << 24),
-        };
-        memcpy(programm_memory,programm_instuctions,sizeof(programm_instuctions));
-        programm_size=11;
-    }
-    else if(strcmp(programm_ident,"prog2") == 0)
-    {
-        unsigned int programm_instuctions[]= {
-            (PUSHC << 24 | IMMEDIATE(-2)),
-            (RDINT << 24),
-            (MUL << 24), 
-            (PUSHC << 24 | IMMEDIATE(3)),
-            (ADD << 24),
-            (WRINT << 24),
-            (PUSHC << 24 | IMMEDIATE('\n')),
-            (WRCHR << 24),
-            (HALT << 24),
-        };
-        memcpy(programm_memory,programm_instuctions,sizeof(programm_instuctions));
-        programm_size=9;
-    }
-
-    else if(strcmp(programm_ident,"prog3") == 0)
-    {
-        unsigned int programm_instuctions[]= {
-            (RDCHR << 24),
-            (WRINT << 24),
-            (PUSHC << 24 | IMMEDIATE('\n')),
-            (WRCHR << 24),
-            (HALT << 24),
-        };
-        memcpy(programm_memory,programm_instuctions,sizeof(programm_instuctions));
-        programm_size=5;
-    }
-    else 
-    {
-        printf("Unknown Program.\nExisting now");
-        exit(1);
-    }
-
-}
-
 void load_programm_from_File(char *programm_path)
 {
-    //so you only need to give the relative path
-    programm_path = "/Tests/Aufgabe2_Tests/%c", programm_path;
     //Mode nochmal auschecken
-    FILE *file_managment = fopen(programm_path,'r');
-
+    FILE *file_managment = fopen(programm_path,"r");
     if(file_managment == NULL)
     {
-        printf("Error while loading File");
-        exit(1);
+        printf("Error while opening File");
+        exit(99);
     }
+    //Verify the format of the File
+    char format_verify[4];
+    if(fread( &format_verify[0], sizeof(char), 4, file_managment) != 4) { exit(99); }
 
+    if(!((format_verify[0] == 'N') & (format_verify[1] == 'J') & (format_verify[2] == 'B') & (format_verify[3] == 'F'))) 
+    {
+        printf("Unknown Format");
+        exit(99);
+    }
+    //Read the version number
+    int version_read;
+    if(fread( &version_read, sizeof(int), 1, file_managment) != 1){ exit(99); }
+    //Verify the version number
+    if((version_read != VERSION)) { printf("Version missmatch"); exit(99); }
+
+    //Read the number of instructions
+    int instruction_count;
+    if(fread( &instruction_count, sizeof(int), 1, file_managment) != 1) {printf("Error, noob"); exit(99); }
+    programm_size = instruction_count;
+    //Allocate memory for instructions
+    //TODO
+    //programm_memory= malloc(sizeof(int) * instruction_count);
+    //if(programm_memory == NULL) { printf("Error while allocating memory"); exit(99); } 
+
+    //Read number of Variables
+    int variable_count;
+    if(fread( &variable_count, sizeof(int), 1, file_managment) != 1) {printf("Error, noob"); exit(99); }
+    //Allocate memory for variables
+    //TODO
+    //*programm_memory= malloc(sizeof(int) * instruction_count);
+    //if(programm_memory == NULL) { printf("Error while allocating memory"); exit(99); } 
+
+    //Load instructions into programm_memory
+    if(fread( &programm_memory[0], sizeof(int), instruction_count, file_managment) != instruction_count) {printf("Error, noob"); exit(99); }
+
+    stackpointer=0;
+    programm_counter=0;
 
     fclose(file_managment);
 }
@@ -273,7 +251,6 @@ void print_programm()
 }
 
 void print_stack()
-
 {
     for(int i=0; i < sizeof(stack);i++)
     {
