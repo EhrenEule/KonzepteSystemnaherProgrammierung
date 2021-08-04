@@ -9,13 +9,14 @@
 #include <stdio.h>
 #include <limits.h>
 
-//size = 100? 
+
 unsigned int *programm_memory;
 unsigned int *variable_memory;
 int programm_size;
 unsigned int instruction;
-int stack[1000];
+int stack[10000];
 int stackpointer;
+int framepointer;
 int programm_counter;
 bool halt;
 
@@ -46,7 +47,6 @@ int main(int argc, char *argv[]) {
     {
         printf("unknown command line argument '%s', try './njvm --help'\n", argv[1]);
     }
-
     while(!halt)
     {
         instruction = programm_memory[programm_counter];
@@ -85,7 +85,7 @@ void load_programm_from_File(char *programm_path)
 
     //Read the number of instructions
     int instruction_count;
-    if(fread( &instruction_count, sizeof(int), 1, file_managment) != 1) {printf("Error, noob"); exit(99); }
+    if(fread( &instruction_count, sizeof(int), 1, file_managment) != 1) { printf("Error, noob"); exit(99); }
     programm_size = instruction_count;
     //Allocate memory for instructions
     unsigned int *temp_programm_memory= malloc(sizeof(int) * instruction_count);
@@ -94,16 +94,18 @@ void load_programm_from_File(char *programm_path)
 
     //Read number of Variables
     int variable_count;
-    if(fread( &variable_count, sizeof(int), 1, file_managment) != 1) {printf("Error, noob"); exit(99); }
+    if(fread( &variable_count, sizeof(int), 1, file_managment) != 1) { printf("Error, noob"); exit(99); }
     //Allocate memory for variables
     unsigned int *temp_variable_memory= malloc(sizeof(int) * variable_count);
     if(temp_variable_memory == NULL) { printf("Error while allocating variable memory"); exit(99); } 
+    variable_memory = temp_variable_memory;
 
     //Load instructions into programm_memory
-    if(fread( &programm_memory[0], sizeof(int), instruction_count, file_managment) != instruction_count) {printf("Error, noob"); exit(99); }
+    if(fread( &programm_memory[0], sizeof(int), instruction_count, file_managment) != instruction_count) { printf("Error, noob"); exit(99); }
 
     stackpointer=0;
     programm_counter=0;
+    framepointer=0;
 
     fclose(file_managment);
 }
@@ -111,15 +113,47 @@ void load_programm_from_File(char *programm_path)
 void execute_instruction(unsigned int instruction)
 {
     unsigned char opcode = instruction >> 24;
+    int immediate = IMMEDIATE(instruction);
+    immediate = SIGN_EXTEND(immediate);
 
     if((opcode == HALT))
     {
         halt=true;
     }
+    else if((opcode == PUSHL))
+    {
+        stack[stackpointer] = stack[framepointer+immediate];
+        stackpointer++;
+    }
+    else if((opcode == POPL))
+    {
+        stack[framepointer+immediate] = stack[stackpointer-1];
+        stackpointer--;
+    }
+    else if((opcode == ASF))
+    {
+        stack[stackpointer] = framepointer;
+        framepointer = stackpointer;
+        stackpointer = stackpointer + immediate;
+    }
+    else if((opcode == RSF))
+    {
+        stackpointer = framepointer;
+        framepointer = stack[stackpointer-1];
+        stackpointer--;
+    }
+    else if((opcode == PUSHG))
+    {
+        stack[stackpointer] = variable_memory[immediate];
+        stackpointer++;
+    }
+    else if((opcode == POPG))
+    {
+        variable_memory[immediate] = stack[stackpointer-1];
+        stackpointer--;
+    }
     else if((opcode == PUSHC))
     {
-        int immediate = IMMEDIATE(instruction);
-        immediate = SIGN_EXTEND(immediate);
         stack[stackpointer] = immediate;
         stackpointer++;
     }
@@ -200,15 +234,40 @@ void print_programm()
     {
         unsigned int instruction = programm_memory[i];
         unsigned char opcode = instruction >> 24;
+        int immediate = IMMEDIATE(instruction);
+            immediate = SIGN_EXTEND(immediate);
+
         if((opcode == HALT))
         {
             printf("%d:\thalt\n", counter);
         }
+        else if((opcode == ASF))
+        {
+            printf("%d:\tasf\t%d\n", counter,immediate);
+        }
+        else if((opcode == RSF))
+        {
+            printf("%d:\trsf\t\n", counter);
+        }
+        else if((opcode == PUSHL))
+        {
+            printf("%d:\tpushl\t%d\n", counter,immediate);
+        }
+        else if((opcode == POPL))
+        {
+            printf("%d:\tpopl\t%d\n", counter,immediate);
+        }
         else if((opcode == PUSHC))
         {
-            int immediate = IMMEDIATE(instruction);
-            immediate = SIGN_EXTEND(immediate);
             printf("%d:\tpushc\t%d\n", counter,immediate);
+        }
+        else if((opcode == PUSHG))
+        {
+            printf("%d:\tpushg\t%d\n", counter,immediate);
+        }
+        else if((opcode == POPG))
+        {
+            printf("%d:\tpopg\t%d\n", counter,immediate);
         }
         else if((opcode == ADD))
         {
