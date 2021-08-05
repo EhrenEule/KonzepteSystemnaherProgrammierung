@@ -116,115 +116,203 @@ void execute_instruction(unsigned int instruction)
     int immediate = IMMEDIATE(instruction);
     immediate = SIGN_EXTEND(immediate);
 
-    if((opcode == HALT))
+    switch(opcode)
     {
-        halt=true;
-    }
-    else if((opcode == PUSHL))
-    {
-        stack[stackpointer] = stack[framepointer+immediate];
-        stackpointer++;
-    }
-    else if((opcode == POPL))
-    {
-        stack[framepointer+immediate] = stack[stackpointer-1];
-        stackpointer--;
-    }
-    else if((opcode == ASF))
-    {
-        stack[stackpointer] = framepointer;
-        framepointer = stackpointer;
-        stackpointer = stackpointer + immediate;
-    }
-    else if((opcode == RSF))
-    {
-        stackpointer = framepointer;
-        framepointer = stack[stackpointer-1];
-        stackpointer--;
-    }
-    else if((opcode == PUSHG))
-    {
-        stack[stackpointer] = variable_memory[immediate];
-        stackpointer++;
-    }
-    else if((opcode == POPG))
-    {
-        variable_memory[immediate] = stack[stackpointer-1];
-        stackpointer--;
-    }
-    else if((opcode == PUSHC))
-    {
-        stack[stackpointer] = immediate;
-        stackpointer++;
-    }
-    else if((opcode == ADD))
-    {
-        stack[stackpointer-2] = stack[stackpointer-2] + stack[stackpointer-1];
-        stack[stackpointer-1] = 0;
-        stackpointer--;
-    }  
-    else if((opcode == SUB))
-    {
-        stack[stackpointer-2] = stack[stackpointer-2] - stack[stackpointer-1];
-        stack[stackpointer-1] = 0;
-        stackpointer--;
-    } 
-    else if((opcode == MUL))
-    {
-        stack[stackpointer-2] = stack[stackpointer-2] * stack[stackpointer-1];
-        stack[stackpointer-1] = 0;
-        stackpointer--;
-    } 
-    else if((opcode == DIV))
-    {
-        if((stack[stackpointer-1] !=0))
-        {
-        stack[stackpointer-2] = stack[stackpointer-2] / stack[stackpointer-1];
-        stack[stackpointer-1] = 0;
-        stackpointer--;
-        }
-        else
-        {
-            printf("Cant divide through 0");
-            exit(1);
-        }
-    } 
-    else if((opcode == MOD))
-    {
-        stack[stackpointer-2] = stack[stackpointer-2] % stack[stackpointer-1];
-        stack[stackpointer-1] = 0;
-        stackpointer--;
-    } 
-    else if((opcode == RDINT))
-    {
-        int scanned_num;
-        printf("Enter Integer: ");
-        scanf("%d",&scanned_num);
-        stack[stackpointer] = scanned_num;
-        stackpointer++;
-    } 
-    else if((opcode == WRINT))
-    {
-        printf("%d",stack[stackpointer-1]);
-        stack[stackpointer-1] = 0;
-        stackpointer--;
-    }
-    else if((opcode == RDCHR))
-    {
-        char scanned_char;
-        printf("Enter Char: ");
-        scanf(" %c",&scanned_char);
-        stack[stackpointer] = scanned_char;
-        stackpointer++;
-    }
-    else if((opcode == WRCHR))
-    {
-        char wr_char= stack[stackpointer-1];
-        printf("%c",wr_char);
-        stack[stackpointer-1] = 0;
-        stackpointer--;
-    } 
+        case HALT:
+            halt=true;
+            break;
 
+        case PUSHC:
+            stack[stackpointer] = immediate;
+            stackpointer++;
+            break;
+        
+        case ADD:
+            stack[stackpointer-2] = stack[stackpointer-2] + stack[stackpointer-1];
+            stack[stackpointer-1] = 0;
+            stackpointer--;
+            break;
+    
+        case SUB:
+            stack[stackpointer-2] = stack[stackpointer-2] - stack[stackpointer-1];
+            stack[stackpointer-1] = 0;
+            stackpointer--;
+            break;
+    
+        case MUL:
+            stack[stackpointer-2] = stack[stackpointer-2] * stack[stackpointer-1];
+            stack[stackpointer-1] = 0;
+            stackpointer--;
+            break;
+    
+        case DIV:
+            if((stack[stackpointer-1] !=0))
+            {
+                stack[stackpointer-2] = stack[stackpointer-2] / stack[stackpointer-1];
+                stack[stackpointer-1] = 0;
+                stackpointer--;
+            }
+            else
+            {
+                printf("Cant divide through 0");
+                exit(1);
+            }
+            break;
+    
+        case MOD: ;
+            stack[stackpointer-2] = stack[stackpointer-2] % stack[stackpointer-1];
+            stack[stackpointer-1] = 0;
+            stackpointer--;
+            break;
+
+        case RDINT: ;
+            int scanned_num;
+            printf("Enter Integer: ");
+            scanf("%d",&scanned_num);
+            stack[stackpointer] = scanned_num;
+            stackpointer++;
+            break;
+    
+        case WRINT:
+            printf("%d",stack[stackpointer-1]);
+            stack[stackpointer-1] = 0;
+            stackpointer--;
+            break;
+    
+        case RDCHR: ;
+            char scanned_char;
+            printf("Enter Char: ");
+            scanf(" %c",&scanned_char);
+            stack[stackpointer] = scanned_char;
+            stackpointer++;
+            break;
+    
+        case WRCHR: ;
+            char wr_char= stack[stackpointer-1];
+            printf("%c",wr_char);
+            stack[stackpointer-1] = 0;
+            stackpointer--;
+            break;
+        
+        case PUSHG:
+            stack[stackpointer] = variable_memory[immediate];
+            stackpointer++;
+            break;
+    
+        case POPG:
+            variable_memory[immediate] = stack[stackpointer-1];
+            stackpointer--;
+            break;
+        
+        case ASF:
+            stack[stackpointer] = framepointer;
+            framepointer = stackpointer;
+            stackpointer = stackpointer + immediate;
+            break;
+    
+        case RSF:
+            stackpointer = framepointer;
+            framepointer = stack[stackpointer-1];
+            stackpointer--;
+            break;
+        
+        case PUSHL:
+            stack[stackpointer] = stack[framepointer+immediate];
+            stackpointer++;
+            break;
+        
+        case POPL:
+            stack[framepointer+immediate] = stack[stackpointer-1];
+            stackpointer--;
+            break;
+
+        case EQ:
+            if(stack[stackpointer-1] == stack[stackpointer-2])
+            {
+                stack[stackpointer-2] = 1;
+                stack[stackpointer-1] = 0;
+            }
+            else
+            {
+                stack[stackpointer-2] = 0;
+                stack[stackpointer-1] = 0;
+            }
+            stackpointer--;
+            break;
+
+        case NE:
+            if(stack[stackpointer-1] != stack[stackpointer-2])
+            {
+                stack[stackpointer-2] = 1;
+                stack[stackpointer-1] = 0;
+            }
+            else
+            {
+                stack[stackpointer-2] = 0;
+                stack[stackpointer-1] = 0;
+            }
+            stackpointer--;
+            break;
+
+        case LT:
+            if(stack[stackpointer-1] < stack[stackpointer-2])
+            {
+                stack[stackpointer-2] = 1;
+                stack[stackpointer-1] = 0;
+            }
+            else
+            {
+                stack[stackpointer-2] = 0;
+                stack[stackpointer-1] = 0;
+            }
+            stackpointer--;
+            break;
+
+        case LE:
+            if(stack[stackpointer-1] <= stack[stackpointer-2])
+            {
+                stack[stackpointer-2] = 1;
+                stack[stackpointer-1] = 0;
+            }
+            else
+            {   
+                stack[stackpointer-2] = 0;
+                stack[stackpointer-1] = 0;
+            }
+            stackpointer--;
+            break;
+
+        case GT:
+            if(stack[stackpointer-1] > stack[stackpointer-2])
+            {
+                stack[stackpointer-2] = 1;
+                stack[stackpointer-1] = 0;
+            }
+            else
+            {
+                stack[stackpointer-2] = 0;
+                stack[stackpointer-1] = 0;
+            }
+            stackpointer--;
+            break;
+
+        case GE:
+            if(stack[stackpointer-1] >= stack[stackpointer-2])
+            {
+                stack[stackpointer-2] = 1;
+                stack[stackpointer-1] = 0;
+            }
+            else
+            {
+                stack[stackpointer-2] = 0;
+                stack[stackpointer-1] = 0;
+            }
+            stackpointer--;
+            break;
+
+        default:
+            printf("Unkown Opcode");
+    }
 }
 
 void print_programm()
@@ -236,74 +324,103 @@ void print_programm()
         unsigned char opcode = instruction >> 24;
         int immediate = IMMEDIATE(instruction);
             immediate = SIGN_EXTEND(immediate);
+    
+        switch(opcode)
+        {    
+            case HALT:
+                printf("%d:\thalt\n", counter);
+                break;
+        
+            case ASF:
+                printf("%d:\tasf\t%d\n", counter,immediate);
+                break;
+        
+            case RSF:
+                printf("%d:\trsf\t\n", counter);
+                break;
 
-        if((opcode == HALT))
-        {
-            printf("%d:\thalt\n", counter);
-        }
-        else if((opcode == ASF))
-        {
-            printf("%d:\tasf\t%d\n", counter,immediate);
-        }
-        else if((opcode == RSF))
-        {
-            printf("%d:\trsf\t\n", counter);
-        }
-        else if((opcode == PUSHL))
-        {
-            printf("%d:\tpushl\t%d\n", counter,immediate);
-        }
-        else if((opcode == POPL))
-        {
-            printf("%d:\tpopl\t%d\n", counter,immediate);
-        }
-        else if((opcode == PUSHC))
-        {
-            printf("%d:\tpushc\t%d\n", counter,immediate);
-        }
-        else if((opcode == PUSHG))
-        {
-            printf("%d:\tpushg\t%d\n", counter,immediate);
-        }
-        else if((opcode == POPG))
-        {
-            printf("%d:\tpopg\t%d\n", counter,immediate);
-        }
-        else if((opcode == ADD))
-        {
-            printf("%d:\tadd\n", counter);
-        }
-        else if((opcode == SUB))
-        {
-            printf("%d:\tsub\n", counter);
-        }
-        else if((opcode == MUL))
-        {
-            printf("%d:\tmul\n", counter);
-        }
-        else if((opcode == DIV))
-        {
-            printf("%d:\tdiv\n", counter);
-        }
-        else if((opcode == MOD))
-        {
-            printf("%d:\tmod\n", counter);
-        }
-        else if((opcode == RDINT))
-        {
-            printf("%d:\trdint\n", counter);
-        }
-        else if((opcode == RDCHR))
-        {
-            printf("%d:\trdchar\n", counter);
-        }
-        else if((opcode == WRCHR))
-        {
-            printf("%d:\twrchr\n", counter);
-        }
-        else if((opcode == WRINT))
-        {
-            printf("%d:\twrint\n", counter);
+            case EQ:
+                printf("%d:\teq\t\n", counter);
+                break;
+      
+            case NE:
+                printf("%d:\tne\t\n", counter);
+                break;
+
+            case LT:
+                printf("%d:\tllt\t\n", counter);
+                break;
+
+            case LE:
+                printf("%d:\tle\t\n", counter);
+                break;
+
+            case GT:
+                printf("%d:\tgt\t\n", counter);
+                break;
+
+            case GE:
+                printf("%d:\tge\t\n", counter);
+                break;
+
+            case PUSHL:
+                printf("%d:\tpushl\t%d\n", counter,immediate);
+                break;
+
+            case POPL:
+                printf("%d:\tpopl\t%d\n", counter,immediate);
+                break;
+
+            case PUSHC:
+                printf("%d:\tpushc\t%d\n", counter,immediate);
+                break;
+
+            case PUSHG:
+                printf("%d:\tpushg\t%d\n", counter,immediate);
+                break;
+
+            case POPG:
+                printf("%d:\tpopg\t%d\n", counter,immediate);
+                break;
+
+            case ADD:
+                printf("%d:\tadd\n", counter);
+                break;
+
+            case SUB:
+                printf("%d:\tsub\n", counter);
+                break;
+
+            case MUL:
+                printf("%d:\tmul\n", counter);
+                break;
+
+            case DIV:
+                printf("%d:\tdiv\n", counter);
+                break;
+
+            case MOD:
+                printf("%d:\tmod\n", counter);
+                break;
+
+            case RDINT:
+                printf("%d:\trdint\n", counter);
+                break;
+
+            case RDCHR:
+                printf("%d:\trdchar\n", counter);
+                break;
+
+            case WRCHR:
+                printf("%d:\twrchr\n", counter);
+                break;
+
+            case WRINT:
+                printf("%d:\twrint\n", counter);
+                break;
+
+            default:
+                printf("Unkown Opcode");
         }
         counter++;
     }
