@@ -12,8 +12,9 @@ Aufgabe 6:
 Aufgabe 7:
 Aufgabe 8:
 
+--map gibt die immediate werte der sprung befehle aus
 
-Debugger commands:
+//Debugger commands:
 
 gcc program.c -g
 Then use gdb:
@@ -24,5 +25,7 @@ $ gdb ./a.out
 (gdb) backtrace
 <offending code is shown here>
 
-Datei ausführbar machen
+//Datei ausführbar machen
 chmod +x njvm
+
+//Debugger Spezifikation

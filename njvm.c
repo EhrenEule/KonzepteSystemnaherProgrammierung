@@ -18,12 +18,12 @@ int stack[10000];
 int stackpointer;
 int framepointer;
 int programm_counter;
-bool halt;
+bool halt=true;
+bool debug=false;
 
 int main(int argc, char *argv[]) {
 
     printf("Ninja Virtual Machine started\n");
-    halt=true;
     
     if(strcmp(argv[1], "--version") == 0)
     {
@@ -41,12 +41,16 @@ int main(int argc, char *argv[]) {
         strncat(relative_programm_path, argv[1], strlen(argv[1]));
         load_programm_from_File(relative_programm_path);
         halt=false;
-        print_programm();
     }
     else if(argv[1] != NULL)
     {
         printf("unknown command line argument '%s', try './njvm --help'\n", argv[1]);
     }
+    //To activate debug mode
+    if(strcmp(argv[2], "--debug") == 0){ debug=true; }
+
+
+    //for(int p=0;p< 100 ; p++)
     while(!halt)
     {
         instruction = programm_memory[programm_counter];
@@ -54,6 +58,7 @@ int main(int argc, char *argv[]) {
         execute_instruction(instruction);
         //print_stack();
     }
+    
 
     printf("Ninja Virtual Machine stopped");
     return 0;
@@ -107,6 +112,12 @@ void load_programm_from_File(char *programm_path)
     programm_counter=0;
     framepointer=0;
 
+    //Initialise Stack with -1
+    for(int i=0; i< (sizeof(stack)/ sizeof(stack[0])); i++)
+    {
+        stack[i] = -1;
+    }
+
     fclose(file_managment);
 }
 
@@ -129,19 +140,19 @@ void execute_instruction(unsigned int instruction)
         
         case ADD:
             stack[stackpointer-2] = stack[stackpointer-2] + stack[stackpointer-1];
-            stack[stackpointer-1] = 0;
+            stack[stackpointer-1] = -1;
             stackpointer--;
             break;
     
         case SUB:
             stack[stackpointer-2] = stack[stackpointer-2] - stack[stackpointer-1];
-            stack[stackpointer-1] = 0;
+            stack[stackpointer-1] = -1;
             stackpointer--;
             break;
     
         case MUL:
             stack[stackpointer-2] = stack[stackpointer-2] * stack[stackpointer-1];
-            stack[stackpointer-1] = 0;
+            stack[stackpointer-1] = -1;
             stackpointer--;
             break;
     
@@ -149,7 +160,7 @@ void execute_instruction(unsigned int instruction)
             if((stack[stackpointer-1] !=0))
             {
                 stack[stackpointer-2] = stack[stackpointer-2] / stack[stackpointer-1];
-                stack[stackpointer-1] = 0;
+                stack[stackpointer-1] = -1;
                 stackpointer--;
             }
             else
@@ -161,7 +172,7 @@ void execute_instruction(unsigned int instruction)
     
         case MOD: ;
             stack[stackpointer-2] = stack[stackpointer-2] % stack[stackpointer-1];
-            stack[stackpointer-1] = 0;
+            stack[stackpointer-1] = -1;
             stackpointer--;
             break;
 
@@ -174,8 +185,8 @@ void execute_instruction(unsigned int instruction)
             break;
     
         case WRINT:
-            printf("%d",stack[stackpointer-1]);
-            stack[stackpointer-1] = 0;
+            printf("%d\n",stack[stackpointer-1]);
+            stack[stackpointer-1] = -1;
             stackpointer--;
             break;
     
@@ -190,7 +201,7 @@ void execute_instruction(unsigned int instruction)
         case WRCHR: ;
             char wr_char= stack[stackpointer-1];
             printf("%c",wr_char);
-            stack[stackpointer-1] = 0;
+            stack[stackpointer-1] = -1;
             stackpointer--;
             break;
         
@@ -227,91 +238,106 @@ void execute_instruction(unsigned int instruction)
             break;
 
         case EQ:
-            if(stack[stackpointer-1] == stack[stackpointer-2])
+            if(stack[stackpointer-2] == stack[stackpointer-1])
             {
                 stack[stackpointer-2] = 1;
-                stack[stackpointer-1] = 0;
             }
             else
             {
-                stack[stackpointer-2] = 0;
-                stack[stackpointer-1] = 0;
+                stack[stackpointer-2] = 0;;
             }
+            stack[stackpointer-1] = -1;
             stackpointer--;
             break;
 
         case NE:
-            if(stack[stackpointer-1] != stack[stackpointer-2])
+            if(stack[stackpointer-2] != stack[stackpointer-1])
             {
                 stack[stackpointer-2] = 1;
-                stack[stackpointer-1] = 0;
+                stack[stackpointer-1] = -1;
             }
             else
             {
                 stack[stackpointer-2] = 0;
-                stack[stackpointer-1] = 0;
+                stack[stackpointer-1] = -1;
             }
             stackpointer--;
             break;
 
         case LT:
-            if(stack[stackpointer-1] < stack[stackpointer-2])
+            if(stack[stackpointer-2] < stack[stackpointer-1])
             {
                 stack[stackpointer-2] = 1;
-                stack[stackpointer-1] = 0;
+                stack[stackpointer-1] = -1;
             }
             else
             {
                 stack[stackpointer-2] = 0;
-                stack[stackpointer-1] = 0;
+                stack[stackpointer-1] = -1;
             }
             stackpointer--;
             break;
 
         case LE:
-            if(stack[stackpointer-1] <= stack[stackpointer-2])
+            if(stack[stackpointer-2] <= stack[stackpointer-1])
             {
                 stack[stackpointer-2] = 1;
-                stack[stackpointer-1] = 0;
+                stack[stackpointer-1] = -1;
             }
             else
             {   
                 stack[stackpointer-2] = 0;
-                stack[stackpointer-1] = 0;
+                stack[stackpointer-1] = -1;
             }
             stackpointer--;
             break;
 
         case GT:
-            if(stack[stackpointer-1] > stack[stackpointer-2])
+            if(stack[stackpointer-2] > stack[stackpointer-1])
             {
                 stack[stackpointer-2] = 1;
-                stack[stackpointer-1] = 0;
             }
             else
             {
                 stack[stackpointer-2] = 0;
-                stack[stackpointer-1] = 0;
             }
+            stack[stackpointer-1] = -1;
             stackpointer--;
             break;
 
         case GE:
-            if(stack[stackpointer-1] >= stack[stackpointer-2])
+            if(stack[stackpointer-2] >= stack[stackpointer-1])
             {
                 stack[stackpointer-2] = 1;
-                stack[stackpointer-1] = 0;
+                stack[stackpointer-1] = -1;
             }
             else
             {
                 stack[stackpointer-2] = 0;
-                stack[stackpointer-1] = 0;
+                stack[stackpointer-1] = -1;
             }
             stackpointer--;
             break;
 
+        case JMP:
+            programm_counter = immediate;
+            break;
+
+        case BRF:
+            if(stack[stackpointer-1] == 0) { programm_counter = immediate; }
+            stack[stackpointer-1] = -1; 
+            stackpointer--;
+            break;
+
+        case BRT:
+            if(stack[stackpointer-1] == 1) { programm_counter = immediate; }
+            stack[stackpointer-1] = -1; 
+            stackpointer--;
+            break;
+
         default:
-            printf("Unkown Opcode");
+            printf("Unkown Opcode:%d\tImmediate:%d", opcode,immediate);
+            exit(99);
     }
 }
 
@@ -331,6 +357,62 @@ void print_programm()
                 printf("%d:\thalt\n", counter);
                 break;
         
+            case PUSHC:
+                printf("%d:\tpushc\t%d\n", counter,immediate);
+                break;
+
+            case ADD:
+                printf("%d:\tadd\n", counter);
+                break;
+
+            case SUB:
+                printf("%d:\tsub\n", counter);
+                break;
+
+            case MUL:
+                printf("%d:\tmul\n", counter);
+                break;
+
+            case DIV:
+                printf("%d:\tdiv\n", counter);
+                break;
+
+            case MOD:
+                printf("%d:\tmod\n", counter);
+                break;
+
+            case RDINT:
+                printf("%d:\trdint\n", counter);
+                break;
+
+            case WRINT:
+                printf("%d:\twrint\n", counter);
+                break;
+
+            case RDCHR:
+                printf("%d:\trdchar\n", counter);
+                break;
+
+            case WRCHR:
+                printf("%d:\twrchr\n", counter);
+                break;
+            
+            case PUSHG:
+                printf("%d:\tpushg\t%d\n", counter,immediate);
+                break;
+
+            case POPG:
+                printf("%d:\tpopg\t%d\n", counter,immediate);
+                break;
+            
+            case PUSHL:
+                printf("%d:\tpushl\t%d\n", counter,immediate);
+                break;
+
+            case POPL:
+                printf("%d:\tpopl\t%d\n", counter,immediate);
+                break;
+
             case ASF:
                 printf("%d:\tasf\t%d\n", counter,immediate);
                 break;
@@ -363,60 +445,16 @@ void print_programm()
                 printf("%d:\tge\t\n", counter);
                 break;
 
-            case PUSHL:
-                printf("%d:\tpushl\t%d\n", counter,immediate);
+            case JMP:
+                printf("%d:\tjmp\t%d\n", counter,immediate);
                 break;
 
-            case POPL:
-                printf("%d:\tpopl\t%d\n", counter,immediate);
+            case BRF:
+                printf("%d:\tbrf\t%d\n", counter,immediate);
                 break;
 
-            case PUSHC:
-                printf("%d:\tpushc\t%d\n", counter,immediate);
-                break;
-
-            case PUSHG:
-                printf("%d:\tpushg\t%d\n", counter,immediate);
-                break;
-
-            case POPG:
-                printf("%d:\tpopg\t%d\n", counter,immediate);
-                break;
-
-            case ADD:
-                printf("%d:\tadd\n", counter);
-                break;
-
-            case SUB:
-                printf("%d:\tsub\n", counter);
-                break;
-
-            case MUL:
-                printf("%d:\tmul\n", counter);
-                break;
-
-            case DIV:
-                printf("%d:\tdiv\n", counter);
-                break;
-
-            case MOD:
-                printf("%d:\tmod\n", counter);
-                break;
-
-            case RDINT:
-                printf("%d:\trdint\n", counter);
-                break;
-
-            case RDCHR:
-                printf("%d:\trdchar\n", counter);
-                break;
-
-            case WRCHR:
-                printf("%d:\twrchr\n", counter);
-                break;
-
-            case WRINT:
-                printf("%d:\twrint\n", counter);
+            case BRT:
+                printf("%d:\tbrt\t%d\n", counter,immediate);
                 break;
 
             default:
@@ -428,11 +466,11 @@ void print_programm()
 
 void print_stack()
 {
-    for(int i=0; i < sizeof(stack);i++)
+    for(int i=0; i < (sizeof(stack)/sizeof(stack[0]));i++)
     {
-        if(stack[i] != 0)
+        if(stack[i] != (-1))
         {
-        printf("Stackpointer:%d\t%d\n",stackpointer,stack[i]);
+        printf("%d\n",stack[i]);
         }
     }
     printf("\n");
