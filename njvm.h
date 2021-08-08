@@ -43,6 +43,10 @@ void print_stack();
 
 void load_programm_from_File(char *programm_path);
 
-char* concat(const char *s1, const char *s2);
+void print_instruction(int counter,unsigned int instruction);
+
+_Bool debug_menu();
+
+void print_static_data();
 
 #endif

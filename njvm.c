@@ -12,7 +12,8 @@
 
 unsigned int *programm_memory;
 unsigned int *variable_memory;
-int programm_size;
+int programm_memory_size;
+int variable_memory_size;
 unsigned int instruction;
 int stack[10000];
 int stackpointer;
@@ -20,6 +21,7 @@ int framepointer;
 int programm_counter;
 bool halt=true;
 bool debug=false;
+int breakpoint;
 
 int main(int argc, char *argv[]) {
 
@@ -47,16 +49,21 @@ int main(int argc, char *argv[]) {
         printf("unknown command line argument '%s', try './njvm --help'\n", argv[1]);
     }
     //To activate debug mode
-    if(strcmp(argv[2], "--debug") == 0){ debug=true; }
+    if((argc == 3) && (strcmp(argv[2], "--debug") == 0)){ debug=true; }
 
-
-    //for(int p=0;p< 100 ; p++)
+    //This is where the magic happens
     while(!halt)
     {
         instruction = programm_memory[programm_counter];
+        if(breakpoint == programm_counter) { debug=true; }
+        while(debug)
+        {
+            print_instruction(programm_counter,instruction);
+            bool should_step=debug_menu();
+            if(should_step) { break; };
+        }
         programm_counter++;
         execute_instruction(instruction);
-        //print_stack();
     }
     
 
@@ -91,7 +98,7 @@ void load_programm_from_File(char *programm_path)
     //Read the number of instructions
     int instruction_count;
     if(fread( &instruction_count, sizeof(int), 1, file_managment) != 1) { printf("Error, noob"); exit(99); }
-    programm_size = instruction_count;
+    programm_memory_size = instruction_count;
     //Allocate memory for instructions
     unsigned int *temp_programm_memory= malloc(sizeof(int) * instruction_count);
     if(temp_programm_memory == NULL) { printf("Error while allocating instruction memory"); exit(99); } 
@@ -100,6 +107,7 @@ void load_programm_from_File(char *programm_path)
     //Read number of Variables
     int variable_count;
     if(fread( &variable_count, sizeof(int), 1, file_managment) != 1) { printf("Error, noob"); exit(99); }
+    variable_memory_size = variable_count;
     //Allocate memory for variables
     unsigned int *temp_variable_memory= malloc(sizeof(int) * variable_count);
     if(temp_variable_memory == NULL) { printf("Error while allocating variable memory"); exit(99); } 
@@ -344,7 +352,7 @@ void execute_instruction(unsigned int instruction)
 void print_programm()
 {
     int counter=0;
-    for(int i=0;i < programm_size;i++ )
+    for(int i=0;i < programm_memory_size;i++ )
     {
         unsigned int instruction = programm_memory[i];
         unsigned char opcode = instruction >> 24;
@@ -462,10 +470,12 @@ void print_programm()
         }
         counter++;
     }
+    printf("\n");
 }
 
 void print_stack()
 {
+    printf("--Stack--\n");
     for(int i=0; i < (sizeof(stack)/sizeof(stack[0]));i++)
     {
         if(stack[i] != (-1))
@@ -473,5 +483,171 @@ void print_stack()
         printf("%d\n",stack[i]);
         }
     }
-    printf("\n");
+    printf("--End of Stack--\n\n");
+}
+
+void print_static_data()
+{
+    printf("--Static data--\n");
+    for(int i=0;i < variable_memory_size;i++)
+    {
+        if(variable_memory[i] != 0)
+        {
+        printf("data[%d]:%d\n",i, variable_memory[i]);
+        }
+    }
+    printf("--End of static data--\n\n");
+}
+
+bool debug_menu()
+{
+    
+    printf("DEBUG: inspect, list, breakpoint, step, run, quit?\n");
+    char input_str[10];
+    scanf("%s", input_str);
+    if(strcmp(input_str, "inspect") == 0)
+    {
+        printf("stack, data\n");
+        char inspect_input_str[10];
+        scanf("%s", inspect_input_str);
+        if(strcmp(inspect_input_str,"stack") == 0) { print_stack(); }
+        else if(strcmp(inspect_input_str,"data") == 0) { print_static_data(); }
+    }
+    else if(strcmp(input_str, "list") == 0)
+    {
+        print_programm();
+    }
+    else if(strcmp(input_str, "breakpoint") == 0)
+    {
+        printf("Enter breakpoint:");
+        int scanned_breakpoint;
+        scanf("%d", &scanned_breakpoint);
+        breakpoint=scanned_breakpoint;
+        debug=false;;
+    }
+    else if(strcmp(input_str, "step") == 0)
+    {
+        return true;
+    }
+    else if(strcmp(input_str, "run") == 0) { debug=false; }
+    else if(strcmp(input_str, "quit") == 0) { exit(0); }
+    return false;
+}
+
+void print_instruction(int counter,unsigned int instruction)
+{
+    
+        unsigned char opcode = instruction >> 24;
+        int immediate = IMMEDIATE(instruction);
+        immediate = SIGN_EXTEND(immediate);
+    
+        switch(opcode)
+        {    
+            case HALT:
+                printf("%d:\thalt\n",counter);
+                break;
+        
+            case PUSHC:
+                printf("%d:\tpushc\t%d\n",counter,immediate);
+                break;
+
+            case ADD:
+                printf("%d:\tadd\n", counter);
+                break;
+
+            case SUB:
+                printf("%d:\tsub\n", counter);
+                break;
+
+            case MUL:
+                printf("%d:\tmul\n", counter);
+                break;
+
+            case DIV:
+                printf("%d:\tdiv\n", counter);
+                break;
+
+            case MOD:
+                printf("%d:\tmod\n", counter);
+                break;
+
+            case RDINT:
+                printf("%d:\trdint\n", counter);
+                break;
+
+            case WRINT:
+                printf("%d:\twrint\n", counter);
+                break;
+
+            case RDCHR:
+                printf("%d:\trdchar\n", counter);
+                break;
+
+            case WRCHR:
+                printf("%d:\twrchr\n", counter);
+                break;
+            
+            case PUSHG:
+                printf("%d:\tpushg\t%d\n", counter,immediate);
+                break;
+
+            case POPG:
+                printf("%d:\tpopg\t%d\n", counter,immediate);
+                break;
+            
+            case PUSHL:
+                printf("%d:\tpushl\t%d\n", counter,immediate);
+                break;
+
+            case POPL:
+                printf("%d:\tpopl\t%d\n", counter,immediate);
+                break;
+
+            case ASF:
+                printf("%d:\tasf\t%d\n", counter,immediate);
+                break;
+        
+            case RSF:
+                printf("%d:\trsf\t\n", counter);
+                break;
+
+            case EQ:
+                printf("%d:\teq\t\n", counter);
+                break;
+      
+            case NE:
+                printf("%d:\tne\t\n", counter);
+                break;
+
+            case LT:
+                printf("%d:\tllt\t\n", counter);
+                break;
+
+            case LE:
+                printf("%d:\tle\t\n", counter);
+                break;
+
+            case GT:
+                printf("%d:\tgt\t\n", counter);
+                break;
+
+            case GE:
+                printf("%d:\tge\t\n", counter);
+                break;
+
+            case JMP:
+                printf("%d:\tjmp\t%d\n", counter,immediate);
+                break;
+
+            case BRF:
+                printf("%d:\tbrf\t%d\n", counter,immediate);
+                break;
+
+            case BRT:
+                printf("%d:\tbrt\t%d\n", counter,immediate);
+                break;
+
+            default:
+                printf("Unkown Opcode");
+        }
 }
