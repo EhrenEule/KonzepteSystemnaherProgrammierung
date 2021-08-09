@@ -16,12 +16,14 @@ int programm_memory_size;
 int variable_memory_size;
 unsigned int instruction;
 int stack[10000];
+bool halt=true;
+bool debug=false;
+int breakpoint=-10;
+//Registers
 int stackpointer;
 int framepointer;
 int programm_counter;
-bool halt=true;
-bool debug=false;
-int breakpoint;
+unsigned int return_value_register;
 
 int main(int argc, char *argv[]) {
 
@@ -193,7 +195,7 @@ void execute_instruction(unsigned int instruction)
             break;
     
         case WRINT:
-            printf("%d\n",stack[stackpointer-1]);
+            printf("%d",stack[stackpointer-1]);
             stack[stackpointer-1] = -1;
             stackpointer--;
             break;
@@ -225,6 +227,7 @@ void execute_instruction(unsigned int instruction)
         
         case ASF:
             stack[stackpointer] = framepointer;
+            stackpointer++;
             framepointer = stackpointer;
             stackpointer = stackpointer + immediate;
             break;
@@ -232,6 +235,7 @@ void execute_instruction(unsigned int instruction)
         case RSF:
             stackpointer = framepointer;
             framepointer = stack[stackpointer-1];
+            stack[stackpointer-1] = -1;
             stackpointer--;
             break;
         
@@ -343,6 +347,38 @@ void execute_instruction(unsigned int instruction)
             stackpointer--;
             break;
 
+        case CALL:
+            stack[stackpointer] = programm_counter;
+            stackpointer++;
+            programm_counter = immediate;
+            break;
+        
+        case RET:
+            programm_counter = stack[stackpointer-1];
+            stack[stackpointer-1] = -1;
+            stackpointer--;
+            break;
+        
+        case DROP:
+            for(int i=0;i < immediate;i++) { stack[stackpointer-i-1] = -1; }
+            stackpointer= stackpointer - immediate;
+            break;
+        
+        case PUSHR:
+            stack[stackpointer] = return_value_register;
+            stackpointer++;
+            break;
+        
+        case POPR:
+            return_value_register = stack[stackpointer-1];
+            stackpointer--;
+            break;
+        
+        case DUP:
+            stack[stackpointer] = stack[stackpointer-1];
+            stackpointer++;
+            break;
+        
         default:
             printf("Unkown Opcode:%d\tImmediate:%d", opcode,immediate);
             exit(99);
@@ -351,124 +387,10 @@ void execute_instruction(unsigned int instruction)
 
 void print_programm()
 {
-    int counter=0;
     for(int i=0;i < programm_memory_size;i++ )
     {
         unsigned int instruction = programm_memory[i];
-        unsigned char opcode = instruction >> 24;
-        int immediate = IMMEDIATE(instruction);
-            immediate = SIGN_EXTEND(immediate);
-    
-        switch(opcode)
-        {    
-            case HALT:
-                printf("%d:\thalt\n", counter);
-                break;
-        
-            case PUSHC:
-                printf("%d:\tpushc\t%d\n", counter,immediate);
-                break;
-
-            case ADD:
-                printf("%d:\tadd\n", counter);
-                break;
-
-            case SUB:
-                printf("%d:\tsub\n", counter);
-                break;
-
-            case MUL:
-                printf("%d:\tmul\n", counter);
-                break;
-
-            case DIV:
-                printf("%d:\tdiv\n", counter);
-                break;
-
-            case MOD:
-                printf("%d:\tmod\n", counter);
-                break;
-
-            case RDINT:
-                printf("%d:\trdint\n", counter);
-                break;
-
-            case WRINT:
-                printf("%d:\twrint\n", counter);
-                break;
-
-            case RDCHR:
-                printf("%d:\trdchar\n", counter);
-                break;
-
-            case WRCHR:
-                printf("%d:\twrchr\n", counter);
-                break;
-            
-            case PUSHG:
-                printf("%d:\tpushg\t%d\n", counter,immediate);
-                break;
-
-            case POPG:
-                printf("%d:\tpopg\t%d\n", counter,immediate);
-                break;
-            
-            case PUSHL:
-                printf("%d:\tpushl\t%d\n", counter,immediate);
-                break;
-
-            case POPL:
-                printf("%d:\tpopl\t%d\n", counter,immediate);
-                break;
-
-            case ASF:
-                printf("%d:\tasf\t%d\n", counter,immediate);
-                break;
-        
-            case RSF:
-                printf("%d:\trsf\t\n", counter);
-                break;
-
-            case EQ:
-                printf("%d:\teq\t\n", counter);
-                break;
-      
-            case NE:
-                printf("%d:\tne\t\n", counter);
-                break;
-
-            case LT:
-                printf("%d:\tllt\t\n", counter);
-                break;
-
-            case LE:
-                printf("%d:\tle\t\n", counter);
-                break;
-
-            case GT:
-                printf("%d:\tgt\t\n", counter);
-                break;
-
-            case GE:
-                printf("%d:\tge\t\n", counter);
-                break;
-
-            case JMP:
-                printf("%d:\tjmp\t%d\n", counter,immediate);
-                break;
-
-            case BRF:
-                printf("%d:\tbrf\t%d\n", counter,immediate);
-                break;
-
-            case BRT:
-                printf("%d:\tbrt\t%d\n", counter,immediate);
-                break;
-
-            default:
-                printf("Unkown Opcode");
-        }
-        counter++;
+        print_instruction(i,instruction);
     }
     printf("\n");
 }
@@ -476,11 +398,18 @@ void print_programm()
 void print_stack()
 {
     printf("--Stack--\n");
-    for(int i=0; i < (sizeof(stack)/sizeof(stack[0]));i++)
+    for(int i=(sizeof(stack)/sizeof(stack[0])-1);i >= 0 ; i--)
     {
-        if(stack[i] != (-1))
+        
+        if(i <= stackpointer)
         {
-        printf("%d\n",stack[i]);
+            if(i == framepointer && i == stackpointer) 
+            { printf("sp,fp-->"); printf("\t%d\n",stack[i]); }
+            else if(i == framepointer) 
+            { printf("fp-->"); printf("\t%d\n",stack[i]); }
+            else if(i== stackpointer) { printf("sp-->\txxx\n"); }
+            else { printf("\t%d\n",stack[i]); }
+            
         }
     }
     printf("--End of Stack--\n\n");
@@ -522,8 +451,9 @@ bool debug_menu()
         printf("Enter breakpoint:");
         int scanned_breakpoint;
         scanf("%d", &scanned_breakpoint);
+        if(scanned_breakpoint > programm_memory_size-1) { printf("Irregular Breakpoint"); exit(99); }
         breakpoint=scanned_breakpoint;
-        debug=false;;
+        debug=false;
     }
     else if(strcmp(input_str, "step") == 0)
     {
@@ -534,118 +464,140 @@ bool debug_menu()
     return false;
 }
 
-void print_instruction(int counter,unsigned int instruction)
+void print_instruction(int number,unsigned int instruction)
 {
-    
         unsigned char opcode = instruction >> 24;
         int immediate = IMMEDIATE(instruction);
         immediate = SIGN_EXTEND(immediate);
-    
         switch(opcode)
         {    
             case HALT:
-                printf("%d:\thalt\n",counter);
+                printf("%d:\thalt\n",number);
                 break;
         
             case PUSHC:
-                printf("%d:\tpushc\t%d\n",counter,immediate);
+                printf("%d:\tpushc\t%d\n",number,immediate);
                 break;
 
             case ADD:
-                printf("%d:\tadd\n", counter);
+                printf("%d:\tadd\n", number);
                 break;
 
             case SUB:
-                printf("%d:\tsub\n", counter);
+                printf("%d:\tsub\n", number);
                 break;
 
             case MUL:
-                printf("%d:\tmul\n", counter);
+                printf("%d:\tmul\n", number);
                 break;
 
             case DIV:
-                printf("%d:\tdiv\n", counter);
+                printf("%d:\tdiv\n", number);
                 break;
 
             case MOD:
-                printf("%d:\tmod\n", counter);
+                printf("%d:\tmod\n", number);
                 break;
 
             case RDINT:
-                printf("%d:\trdint\n", counter);
+                printf("%d:\trdint\n", number);
                 break;
 
             case WRINT:
-                printf("%d:\twrint\n", counter);
+                printf("%d:\twrint\n", number);
                 break;
 
             case RDCHR:
-                printf("%d:\trdchar\n", counter);
+                printf("%d:\trdchar\n", number);
                 break;
 
             case WRCHR:
-                printf("%d:\twrchr\n", counter);
+                printf("%d:\twrchr\n", number);
                 break;
             
             case PUSHG:
-                printf("%d:\tpushg\t%d\n", counter,immediate);
+                printf("%d:\tpushg\t%d\n", number,immediate);
                 break;
 
             case POPG:
-                printf("%d:\tpopg\t%d\n", counter,immediate);
+                printf("%d:\tpopg\t%d\n", number,immediate);
                 break;
             
             case PUSHL:
-                printf("%d:\tpushl\t%d\n", counter,immediate);
+                printf("%d:\tpushl\t%d\n", number,immediate);
                 break;
 
             case POPL:
-                printf("%d:\tpopl\t%d\n", counter,immediate);
+                printf("%d:\tpopl\t%d\n", number,immediate);
                 break;
 
             case ASF:
-                printf("%d:\tasf\t%d\n", counter,immediate);
+                printf("%d:\tasf\t%d\n", number,immediate);
                 break;
         
             case RSF:
-                printf("%d:\trsf\t\n", counter);
+                printf("%d:\trsf\t\n", number);
                 break;
 
             case EQ:
-                printf("%d:\teq\t\n", counter);
+                printf("%d:\teq\t\n", number);
                 break;
       
             case NE:
-                printf("%d:\tne\t\n", counter);
+                printf("%d:\tne\t\n", number);
                 break;
 
             case LT:
-                printf("%d:\tllt\t\n", counter);
+                printf("%d:\tllt\t\n", number);
                 break;
 
             case LE:
-                printf("%d:\tle\t\n", counter);
+                printf("%d:\tle\t\n", number);
                 break;
 
             case GT:
-                printf("%d:\tgt\t\n", counter);
+                printf("%d:\tgt\t\n", number);
                 break;
 
             case GE:
-                printf("%d:\tge\t\n", counter);
+                printf("%d:\tge\t\n", number);
                 break;
 
             case JMP:
-                printf("%d:\tjmp\t%d\n", counter,immediate);
+                printf("%d:\tjmp\t%d\n", number,immediate);
                 break;
 
             case BRF:
-                printf("%d:\tbrf\t%d\n", counter,immediate);
+                printf("%d:\tbrf\t%d\n", number,immediate);
                 break;
 
             case BRT:
-                printf("%d:\tbrt\t%d\n", counter,immediate);
+                printf("%d:\tbrt\t%d\n", number,immediate);
                 break;
+            
+            case CALL:
+                printf("%d:\tcall\t%d\n", number,immediate);
+                break;
+
+            case RET:
+                printf("%d:\tret\t\n", number);
+                break;
+
+            case DROP:
+                printf("%d:\tdrop\t%d\n", number,immediate);
+                break;
+
+            case PUSHR:
+                printf("%d:\tpushr\t\n", number);
+                break;
+
+            case POPR:
+                printf("%d:\tpopr\t\n", number);
+                break;
+
+            case DUP:
+                printf("%d:\tge\t\n", number);
+                break; 
 
             default:
                 printf("Unkown Opcode");

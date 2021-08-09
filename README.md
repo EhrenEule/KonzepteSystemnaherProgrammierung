@@ -2,8 +2,6 @@
 
 gcc -g -Wall -std=c99 -pedantic
 
-Current TODO: Being able to print the static data and then completing the debug console menu
-
 Aufgabe 0: finished
 
 Aufgabe 1: finished (Bis auf Stacküber- und unterlauf und SIGN_EXTENDED(i) noch verstehen)
@@ -37,5 +35,3 @@ $ gdb ./a.out
 
 //Datei ausführbar machen
 chmod +x njvm
-
-//Debugger Spezifikation

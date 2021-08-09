@@ -3,7 +3,7 @@
 
 #include <stdio.h>
 
-#define VERSION 3
+#define VERSION 4
 
 #define HALT 0
 #define PUSHC 1
@@ -31,6 +31,12 @@
 #define JMP 23 // 17
 #define BRF 24 // 18
 #define BRT 25
+#define CALL 26
+#define RET 27
+#define DROP 28
+#define PUSHR 29
+#define POPR 30
+#define DUP 31
 
 #define IMMEDIATE(x) ((x) & 0x00FFFFFF)
 #define SIGN_EXTEND(i) ((i) & 0x00800000 ? (i) | 0xFF000000 : (i))
