@@ -1,0 +1,10 @@
+//nicees program
+void main() {
+  local Integer n;
+  n = readInteger();
+  if(n != 0 && (n/3)>1)
+	{
+	writeInteger(n);
+	}	
+}
+

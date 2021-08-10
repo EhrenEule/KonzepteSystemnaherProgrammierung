@@ -8,6 +8,7 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <limits.h>
+#include "tree.h"
 
 
 unsigned int *programm_memory;
@@ -24,6 +25,9 @@ int stackpointer;
 int framepointer;
 int programm_counter;
 unsigned int return_value_register;
+
+typedef int Object; 
+typedef Object* ObjRef;
 
 int main(int argc, char *argv[]) {
 
@@ -602,4 +606,46 @@ void print_instruction(int number,unsigned int instruction)
             default:
                 printf("Unkown Opcode");
         }
+}
+
+int eval_node(Node* tree_node)
+{
+    int op1;
+    int op2;
+    int result;
+
+    if(tree_node) { result = tree_node->u.value; }
+
+    else 
+    {
+        op1 = eval_node(tree_node->u.innerNode.left);
+        op2 = eval_node(tree_node->u.innerNode.right);
+
+        switch(tree_node->u.innerNode.operation)
+        {
+            case '+':
+                result = op1 + op2;
+                break;
+
+            case '-':
+                result = op1 - op2;
+                break;
+
+            case '*':
+                result = op1 * op2;
+                break;
+
+            case '/':
+                result = op1 / op2;
+                break;
+
+            case '%':
+                result = op1 % op2;
+                break;
+
+            default:
+                printf("Unkown arithmetic operation");
+                exit(99);
+        }
+    }
 }

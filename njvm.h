@@ -1,9 +1,9 @@
-#ifndef NJVM_H
-#define NJVM_H
+#ifndef __NJVM_H__
+#define __NJVM_H__
 
 #include <stdio.h>
 
-#define VERSION 4
+#define VERSION 5
 
 #define HALT 0
 #define PUSHC 1
@@ -54,5 +54,7 @@ void print_instruction(int counter,unsigned int instruction);
 _Bool debug_menu();
 
 void print_static_data();
+
+int eval_node(Node* tree_node);
 
 #endif
