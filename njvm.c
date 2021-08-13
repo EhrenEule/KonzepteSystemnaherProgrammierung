@@ -226,10 +226,11 @@ void execute_instruction(unsigned int instruction)
             stackpointer++;
             break;
     
-        case POPG:
-            variable_memory = malloc(sizeof(unsigned int)+ sizeof(int));
-            variable_memory->size = sizeof(int);
-            *(int *)variable_memory[immediate].data = PopObject(stackpointer-1);
+        case POPG: ;
+            ObjRef objref = malloc(sizeof(unsigned int)+ sizeof(int));
+            objref->size = sizeof(int);
+            *(int *)objref->data = PopObject(stackpointer-1);
+            variable_memory[immediate] = *objref;
             stack[stackpointer-1] = PushObject(-99);
             stackpointer--;
             break;
@@ -440,10 +441,7 @@ void print_static_data()
     printf("--Static data--\n");
     for(int i=0;i < variable_memory_size;i++)
     {
-        if(*(int *)variable_memory[i].data != 0)
-        {
         printf("data[%d]:%d\n",i,*(int *) variable_memory[i].data);
-        }
     }
     printf("--End of static data--\n\n");
 }
