@@ -3,7 +3,7 @@
 
 #include <stdio.h>
 
-#define VERSION 5
+#define VERSION 4
 
 #define HALT 0
 #define PUSHC 1
@@ -41,6 +41,23 @@
 #define IMMEDIATE(x) ((x) & 0x00FFFFFF)
 #define SIGN_EXTEND(i) ((i) & 0x00800000 ? (i) | 0xFF000000 : (i))
 
+typedef struct
+{
+   unsigned int size;
+   unsigned char data[1];
+} *ObjRef;
+
+//isObjRef = 1 für true
+typedef struct 
+{
+    char isObjRef;
+    union
+    {
+        ObjRef objRef;
+        int number;
+    }u;
+}Stackslot;
+
 void execute_instruction(unsigned int instruction);
 
 void print_programm();
@@ -55,6 +72,13 @@ _Bool debug_menu();
 
 void print_static_data();
 
-int eval_node(Node* tree_node);
+Stackslot PushObject(int value);
+
+int PopObject(int local_stackpointer);
+
+Stackslot PushValue(int value);
+
+int PopValue(int local_stackpointer);
+
 
 #endif

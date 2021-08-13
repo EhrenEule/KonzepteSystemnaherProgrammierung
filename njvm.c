@@ -8,15 +8,14 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <limits.h>
-#include "tree.h"
 
 
-unsigned int *programm_memory;
-unsigned int *variable_memory;
+unsigned int* programm_memory;
+ObjRef variable_memory;
 int programm_memory_size;
 int variable_memory_size;
 unsigned int instruction;
-int stack[10000];
+Stackslot stack[10000];
 bool halt=true;
 bool debug=false;
 int breakpoint=-10;
@@ -24,10 +23,9 @@ int breakpoint=-10;
 int stackpointer;
 int framepointer;
 int programm_counter;
-unsigned int return_value_register;
+ObjRef return_value_register;
 
-typedef int Object; 
-typedef Object* ObjRef;
+
 
 int main(int argc, char *argv[]) {
 
@@ -115,7 +113,7 @@ void load_programm_from_File(char *programm_path)
     if(fread( &variable_count, sizeof(int), 1, file_managment) != 1) { printf("Error, noob"); exit(99); }
     variable_memory_size = variable_count;
     //Allocate memory for variables
-    unsigned int *temp_variable_memory= malloc(sizeof(int) * variable_count);
+    ObjRef temp_variable_memory= malloc((sizeof(int)+sizeof(unsigned int)) * variable_count);
     if(temp_variable_memory == NULL) { printf("Error while allocating variable memory"); exit(99); } 
     variable_memory = temp_variable_memory;
 
@@ -126,10 +124,14 @@ void load_programm_from_File(char *programm_path)
     programm_counter=0;
     framepointer=0;
 
-    //Initialise Stack with -1
+    //malloc for return_value_register
+    return_value_register = malloc(sizeof(unsigned int)+ sizeof(int));
+    return_value_register->size = sizeof(int);
+
+    //Initialise Stack with -99 Objects
     for(int i=0; i< (sizeof(stack)/ sizeof(stack[0])); i++)
     {
-        stack[i] = -1;
+        stack[i]= PushObject(-99);
     }
 
     fclose(file_managment);
@@ -148,33 +150,33 @@ void execute_instruction(unsigned int instruction)
             break;
 
         case PUSHC:
-            stack[stackpointer] = immediate;
+            stack[stackpointer] = PushObject(immediate);
             stackpointer++;
             break;
         
         case ADD:
-            stack[stackpointer-2] = stack[stackpointer-2] + stack[stackpointer-1];
-            stack[stackpointer-1] = -1;
+            stack[stackpointer-2] = PushObject(PopObject(stackpointer-2) + PopObject(stackpointer-1));
+            stack[stackpointer-1] = PushObject(-99);
             stackpointer--;
             break;
-    
+   
         case SUB:
-            stack[stackpointer-2] = stack[stackpointer-2] - stack[stackpointer-1];
-            stack[stackpointer-1] = -1;
+            stack[stackpointer-2] = PushObject(PopObject(stackpointer-2) - PopObject(stackpointer-1));
+            stack[stackpointer-1] = PushObject(-99);
             stackpointer--;
             break;
     
         case MUL:
-            stack[stackpointer-2] = stack[stackpointer-2] * stack[stackpointer-1];
-            stack[stackpointer-1] = -1;
+            stack[stackpointer-2] = PushObject(PopObject(stackpointer-2) * PopObject(stackpointer-1));
+            stack[stackpointer-1] = PushObject(-99);
             stackpointer--;
             break;
     
         case DIV:
-            if((stack[stackpointer-1] !=0))
+            if((*(int *)(stack[stackpointer-1].u.objRef->data) !=0))
             {
-                stack[stackpointer-2] = stack[stackpointer-2] / stack[stackpointer-1];
-                stack[stackpointer-1] = -1;
+                stack[stackpointer-2] = PushObject(PopObject(stackpointer-2) / PopObject(stackpointer-1));
+                stack[stackpointer-1] = PushObject(-99);
                 stackpointer--;
             }
             else
@@ -185,8 +187,8 @@ void execute_instruction(unsigned int instruction)
             break;
     
         case MOD: ;
-            stack[stackpointer-2] = stack[stackpointer-2] % stack[stackpointer-1];
-            stack[stackpointer-1] = -1;
+            stack[stackpointer-2] = PushObject(PopObject(stackpointer-2) * PopObject(stackpointer-1));
+            stack[stackpointer-1] = PushObject(-99);
             stackpointer--;
             break;
 
@@ -194,13 +196,14 @@ void execute_instruction(unsigned int instruction)
             int scanned_num;
             printf("Enter Integer: ");
             scanf("%d",&scanned_num);
-            stack[stackpointer] = scanned_num;
+            stack[stackpointer] = PushObject(scanned_num);
             stackpointer++;
             break;
     
         case WRINT:
-            printf("%d",stack[stackpointer-1]);
-            stack[stackpointer-1] = -1;
+
+            printf("%d",PopObject(stackpointer-1));
+            stack[stackpointer-1] = PushObject(-99);
             stackpointer--;
             break;
     
@@ -208,29 +211,31 @@ void execute_instruction(unsigned int instruction)
             char scanned_char;
             printf("Enter Char: ");
             scanf(" %c",&scanned_char);
-            stack[stackpointer] = scanned_char;
+            stack[stackpointer] = PushObject(scanned_char);
             stackpointer++;
             break;
     
         case WRCHR: ;
-            char wr_char= stack[stackpointer-1];
-            printf("%c",wr_char);
-            stack[stackpointer-1] = -1;
+            printf("%c",PopObject(stackpointer-1));
+            stack[stackpointer-1] = PushObject(-99);
             stackpointer--;
             break;
         
         case PUSHG:
-            stack[stackpointer] = variable_memory[immediate];
+            stack[stackpointer] = PushObject(*(int *)variable_memory[immediate].data);
             stackpointer++;
             break;
     
         case POPG:
-            variable_memory[immediate] = stack[stackpointer-1];
+            variable_memory = malloc(sizeof(unsigned int)+ sizeof(int));
+            variable_memory->size = sizeof(int);
+            *(int *)variable_memory[immediate].data = PopObject(stackpointer-1);
+            stack[stackpointer-1] = PushObject(-99);
             stackpointer--;
             break;
         
         case ASF:
-            stack[stackpointer] = framepointer;
+            stack[stackpointer] = PushValue(framepointer);
             stackpointer++;
             framepointer = stackpointer;
             stackpointer = stackpointer + immediate;
@@ -238,100 +243,96 @@ void execute_instruction(unsigned int instruction)
     
         case RSF:
             stackpointer = framepointer;
-            framepointer = stack[stackpointer-1];
-            stack[stackpointer-1] = -1;
+            framepointer = PopValue(stackpointer-1);
+            stack[stackpointer-1] = PushObject(-99);
             stackpointer--;
             break;
         
         case PUSHL:
-            stack[stackpointer] = stack[framepointer+immediate];
+            stack[stackpointer] = PushObject(PopObject(framepointer+immediate));
             stackpointer++;
             break;
         
         case POPL:
-            stack[framepointer+immediate] = stack[stackpointer-1];
+            stack[framepointer+immediate] = PushObject(PopObject(stackpointer-1));
             stackpointer--;
             break;
 
         case EQ:
-            if(stack[stackpointer-2] == stack[stackpointer-1])
+            if( (*(int *)stack[stackpointer-2].u.objRef->data) == (*(int *)stack[stackpointer-1].u.objRef->data) )
             {
-                stack[stackpointer-2] = 1;
+                stack[stackpointer-2] = PushValue(1);
             }
             else
             {
-                stack[stackpointer-2] = 0;;
+                stack[stackpointer-2] = PushValue(0);
             }
-            stack[stackpointer-1] = -1;
+            stack[stackpointer-1] = PushObject(-99);
             stackpointer--;
             break;
 
         case NE:
-            if(stack[stackpointer-2] != stack[stackpointer-1])
+            if( (*(int *)stack[stackpointer-2].u.objRef->data) != (*(int *)stack[stackpointer-1].u.objRef->data))
             {
-                stack[stackpointer-2] = 1;
-                stack[stackpointer-1] = -1;
+                stack[stackpointer-2] = PushValue(1);
             }
             else
             {
-                stack[stackpointer-2] = 0;
-                stack[stackpointer-1] = -1;
+                stack[stackpointer-2] = PushValue(0);
             }
+            stack[stackpointer-1] = PushObject(-99);
             stackpointer--;
             break;
 
         case LT:
-            if(stack[stackpointer-2] < stack[stackpointer-1])
+            if((*(int *)stack[stackpointer-2].u.objRef->data) < (*(int *)stack[stackpointer-1].u.objRef->data))
             {
-                stack[stackpointer-2] = 1;
-                stack[stackpointer-1] = -1;
+                stack[stackpointer-2] = PushValue(1);
             }
             else
             {
-                stack[stackpointer-2] = 0;
-                stack[stackpointer-1] = -1;
+                stack[stackpointer-2] = PushValue(0);
             }
+            stack[stackpointer-1] = PushObject(-99);
             stackpointer--;
             break;
 
         case LE:
-            if(stack[stackpointer-2] <= stack[stackpointer-1])
+            if((*(int *)stack[stackpointer-2].u.objRef->data) <= (*(int *)stack[stackpointer-1].u.objRef->data))
             {
-                stack[stackpointer-2] = 1;
-                stack[stackpointer-1] = -1;
+                stack[stackpointer-2] = PushValue(1);
             }
             else
             {   
-                stack[stackpointer-2] = 0;
-                stack[stackpointer-1] = -1;
+                stack[stackpointer-2] = PushValue(0);
             }
+            stack[stackpointer-1] = PushObject(-99);
             stackpointer--;
             break;
 
         case GT:
-            if(stack[stackpointer-2] > stack[stackpointer-1])
+            if( (*(int *)stack[stackpointer-2].u.objRef->data) > (*(int *)stack[stackpointer-1].u.objRef->data))
             {
-                stack[stackpointer-2] = 1;
+                stack[stackpointer-2] = PushValue(1);
             }
             else
             {
-                stack[stackpointer-2] = 0;
+                stack[stackpointer-2] = PushValue(0);
             }
-            stack[stackpointer-1] = -1;
+            stack[stackpointer-1] = PushObject(-99);
             stackpointer--;
             break;
 
         case GE:
-            if(stack[stackpointer-2] >= stack[stackpointer-1])
+            if( (*(int *)stack[stackpointer-2].u.objRef->data) >= (*(int *)stack[stackpointer-1].u.objRef->data))
             {
-                stack[stackpointer-2] = 1;
-                stack[stackpointer-1] = -1;
+                stack[stackpointer-2] = PushValue(1);
             }
             else
             {
-                stack[stackpointer-2] = 0;
-                stack[stackpointer-1] = -1;
+                stack[stackpointer-2] = PushValue(0);
             }
+            stack[stackpointer-1] = PushObject(-99);
             stackpointer--;
             break;
 
@@ -340,41 +341,45 @@ void execute_instruction(unsigned int instruction)
             break;
 
         case BRF:
-            if(stack[stackpointer-1] == 0) { programm_counter = immediate; }
-            stack[stackpointer-1] = -1; 
+            if(stack[stackpointer-1].u.number == 0) { programm_counter = immediate; }
+            stack[stackpointer-1] = PushObject(-99);
             stackpointer--;
             break;
 
         case BRT:
-            if(stack[stackpointer-1] == 1) { programm_counter = immediate; }
-            stack[stackpointer-1] = -1; 
+            if(stack[stackpointer-1].u.number == 1) { programm_counter = immediate; } 
+            stack[stackpointer-1] = PushObject(-99);
             stackpointer--;
             break;
 
         case CALL:
-            stack[stackpointer] = programm_counter;
+            stack[stackpointer] = PushValue(programm_counter);
             stackpointer++;
             programm_counter = immediate;
             break;
         
         case RET:
-            programm_counter = stack[stackpointer-1];
-            stack[stackpointer-1] = -1;
+            programm_counter = PopValue(stackpointer-1);
+            stack[stackpointer-1] = PushObject(-99); 
             stackpointer--;
             break;
         
         case DROP:
-            for(int i=0;i < immediate;i++) { stack[stackpointer-i-1] = -1; }
+            for(int i=0;i < immediate;i++) 
+            { 
+                stack[stackpointer-1] = PushObject(-99);
+            }
             stackpointer= stackpointer - immediate;
             break;
         
         case PUSHR:
-            stack[stackpointer] = return_value_register;
+            stack[stackpointer] = PushObject(*(int *)return_value_register->data);
             stackpointer++;
             break;
         
         case POPR:
-            return_value_register = stack[stackpointer-1];
+            *(int *)return_value_register->data = PopObject(stackpointer-1);
+            stack[stackpointer-1] = PushObject(-99);
             stackpointer--;
             break;
         
@@ -404,15 +409,26 @@ void print_stack()
     printf("--Stack--\n");
     for(int i=(sizeof(stack)/sizeof(stack[0])-1);i >= 0 ; i--)
     {
-        
         if(i <= stackpointer)
         {
-            if(i == framepointer && i == stackpointer) 
-            { printf("sp,fp-->"); printf("\t%d\n",stack[i]); }
-            else if(i == framepointer) 
-            { printf("fp-->"); printf("\t%d\n",stack[i]); }
-            else if(i== stackpointer) { printf("sp-->\txxx\n"); }
-            else { printf("\t%d\n",stack[i]); }
+            if(stack[i].isObjRef == 1)
+            {
+                if(i == framepointer && i == stackpointer) 
+                { printf("sp,fp-->"); printf("\t%d\n",(*(int *)stack[i].u.objRef->data)); }
+                else if(i == framepointer) 
+                { printf("fp-->"); printf("\t%d\n",*(int *)stack[i].u.objRef->data); }
+                else if(i== stackpointer) { printf("sp-->\txxx\n"); }
+                else { printf("\t%d\n",*(int *)stack[i].u.objRef->data); }
+            }
+            else if(stack[i].isObjRef == 0)
+            {
+                if(i == framepointer && i == stackpointer) 
+                { printf("sp,fp-->"); printf("\t%d\n",stack[i].u.number); }
+                else if(i == framepointer) 
+                { printf("fp-->"); printf("\t%d\n",stack[i].u.number); }
+                else if(i== stackpointer) { printf("sp-->\txxx\n"); }
+                else { printf("\t%d\n",stack[i].u.number); }
+            }
             
         }
     }
@@ -424,9 +440,9 @@ void print_static_data()
     printf("--Static data--\n");
     for(int i=0;i < variable_memory_size;i++)
     {
-        if(variable_memory[i] != 0)
+        if(*(int *)variable_memory[i].data != 0)
         {
-        printf("data[%d]:%d\n",i, variable_memory[i]);
+        printf("data[%d]:%d\n",i,*(int *) variable_memory[i].data);
         }
     }
     printf("--End of static data--\n\n");
@@ -608,44 +624,50 @@ void print_instruction(int number,unsigned int instruction)
         }
 }
 
-int eval_node(Node* tree_node)
+Stackslot PushObject(int value)
 {
-    int op1;
-    int op2;
-    int result;
+    ObjRef refobj;
+    refobj = malloc(sizeof(unsigned int)+ sizeof(int));
+    refobj->size = sizeof(int);
+    *(int *)refobj->data = value;
 
-    if(tree_node) { result = tree_node->u.value; }
+    Stackslot stackobj;
+    stackobj.isObjRef = 1;
+    stackobj.u.objRef = refobj;
+    return stackobj;
+}
 
+int PopObject(int local_stackpointer)
+{
+    if(stack[local_stackpointer].isObjRef == 1)
+    {
+        ObjRef refobj = stack[local_stackpointer].u.objRef;
+        return *(int *)refobj->data;
+    }
+    else
+    {
+        printf("error while PopObject due to Type missmatch");
+        exit(99);
+    }
+}
+
+Stackslot PushValue(int value)
+{
+    Stackslot stackobj;
+    stackobj.isObjRef = 0;
+    stackobj.u.number = value;
+    return stackobj;
+}
+
+int PopValue(int local_stackpointer)
+{
+    if(stack[local_stackpointer].isObjRef == 0)
+    {
+        return stack[local_stackpointer].u.number;
+    }
     else 
     {
-        op1 = eval_node(tree_node->u.innerNode.left);
-        op2 = eval_node(tree_node->u.innerNode.right);
-
-        switch(tree_node->u.innerNode.operation)
-        {
-            case '+':
-                result = op1 + op2;
-                break;
-
-            case '-':
-                result = op1 - op2;
-                break;
-
-            case '*':
-                result = op1 * op2;
-                break;
-
-            case '/':
-                result = op1 / op2;
-                break;
-
-            case '%':
-                result = op1 % op2;
-                break;
-
-            default:
-                printf("Unkown arithmetic operation");
-                exit(99);
-        }
+        printf("error while PopValue due to Type missmatch");
+        exit(99);
     }
 }
