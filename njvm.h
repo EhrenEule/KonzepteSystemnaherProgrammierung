@@ -3,7 +3,7 @@
 
 #include <stdio.h>
 
-#define VERSION 3
+#define VERSION 5
 
 #define HALT 0
 #define PUSHC 1
