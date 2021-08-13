@@ -2,7 +2,12 @@
 
 gcc -g -Wall -std=c99 -pedantic
 
-Video 10 min 45
+Questions: Bei vergleichsoperatoren das Ergebniss als einfaches value auf den stack legen?
+           Immer checken ob objRef oder number?
+
+PushObject PopObject
+
+PushValue PopValue
 
 Aufgabe 0: finished
 
@@ -14,7 +19,7 @@ Aufgabe 3: finished
 
 Aufgabe 4: finished
 
-Aufgabe 5:
+Aufgabe 5: finished
 
 Aufgabe 6:
 
