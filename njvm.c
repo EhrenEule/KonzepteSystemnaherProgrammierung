@@ -1,4 +1,5 @@
 #include "njvm.h"
+#include "bigint.h"
 #include <stdio.h>
 #include <string.h>
 #include <stdbool.h>
@@ -680,3 +681,21 @@ int PopValue(int local_stackpointer)
         exit(99);
     }
 }
+
+ObjRef newPrimObject(int dataSize) 
+{
+  ObjRef objRef;
+  objRef = malloc(sizeof(unsigned int) +
+                  dataSize * sizeof(unsigned char));
+  if (objRef == NULL) {
+    fatalError("newPrimObject() got no memory");
+  }
+  objRef->size = dataSize;
+  return objRef;
+}
+
+void fatalError(char *msg) {
+  printf("Fatal error: %s\n", msg);
+  exit(1);
+}
+
