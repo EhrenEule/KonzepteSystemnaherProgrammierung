@@ -253,6 +253,8 @@ void execute_instruction(unsigned int instruction)
             //objref->size = sizeof(int);
             //*(int *)objref->data = PopObject(stackpointer-1);
             variable_memory[immediate] = PopObjectRef(stackpointer-1);
+            bip.op1 = variable_memory [immediate];
+            bigPrint(stdout);
             //variable_memory[immediate] = *objref;
             stack[stackpointer-1] = PushValue(-99);
             stackpointer--;
@@ -485,9 +487,15 @@ void print_stack()
 void print_static_data()
 {
     printf("--Static data--\n");
-    for(int i=0;i < variable_memory_size;i++)
+    //ONLY DEBUG THAT i = 1 (i < variable_memory_size)
+    for(int i=0;i <1;i++)
     {
-        printf("data[%d]:%d\n",i,*(int *) variable_memory[i]->data);
+        bip.op1 = variable_memory[i];
+        bigPrint(stdout);
+        
+        printf("data[%d]:%d",i, bigToInt());
+        //bigPrint(stdout);
+        printf("\n");
     }
     printf("--End of static data--\n\n");
 }
@@ -512,7 +520,8 @@ bool debug_menu()
             scanf("%d",&object_stack_adress);
             if(stack[object_stack_adress].isObjRef == 1)
             {
-            printf("Value: %d\n",*(int *)stack[object_stack_adress].u.objRef->data);
+            bip.op1 = stack[object_stack_adress].u.objRef;
+            printf("Value: %d\n",bigToInt());
             }
             else { printf("Is not an object!\n"); }
         }
@@ -678,20 +687,7 @@ void print_instruction(int number,unsigned int instruction)
                 printf("Unkown Opcode");
         }
 }
-/*
-Stackslot PushObject(int value)
-{
-    ObjRef refobj;
-    refobj = malloc(sizeof(unsigned int)+ sizeof(int));
-    refobj->size = sizeof(int);
-    *(int *)refobj->data = value;
 
-    Stackslot stackobj;
-    stackobj.isObjRef = 1;
-    stackobj.u.objRef = refobj;
-    return stackobj;
-}
-*/
 Stackslot PushObjectRef(ObjRef objref)
 {
     Stackslot stackobj;
@@ -699,21 +695,7 @@ Stackslot PushObjectRef(ObjRef objref)
     stackobj.u.objRef = objref;
     return stackobj;
 }
-/*
-int PopObject(int local_stackpointer)
-{
-    if(stack[local_stackpointer].isObjRef == 1)
-    {
-        ObjRef refobj = stack[local_stackpointer].u.objRef;
-        return *(int *)refobj->data;
-    }
-    else
-    {
-        printf("error while PopObject due to Type missmatch");
-        exit(99);
-    }
-}
-*/
+
 ObjRef PopObjectRef(int local_stackpointer)
 {
     if(stack[local_stackpointer].isObjRef == 1)

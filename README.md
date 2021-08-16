@@ -1,6 +1,7 @@
 # KonzepteSystemnaherProgrammierung
 
 gcc -g -Wall -std=c99 -pedantic
+
 gcc -g -Wall -std=c99 -pedantic -I../bigint/build/include -L../bigint/build/lib njvm.c -lbigint
 
 Questions: Bei vergleichsoperatoren das Ergebniss als einfaches value auf den stack legen?
@@ -11,6 +12,9 @@ Questions: Bei vergleichsoperatoren das Ergebniss als einfaches value auf den st
            Modulo mit BigInt Bib?
 
            Div Remainder beachten?
+
+Current Bugs: Cant print static_data
+                
 
 Aufgabe 0: finished
 
@@ -24,7 +28,7 @@ Aufgabe 4: finished
 
 Aufgabe 5: finished
 
-Aufgabe 6: still missing
+Aufgabe 6: modulo still missing
 
 Aufgabe 7:
 
