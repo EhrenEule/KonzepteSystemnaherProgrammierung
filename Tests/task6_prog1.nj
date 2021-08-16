@@ -1,0 +1,21 @@
+void main() {
+  local Integer x;
+  local Integer y;
+  x = 100;
+  
+  writeInteger(fakulteat(x));
+  writeCharacter('\n');
+}
+
+Integer fakulteat(Integer x)
+{
+	if( x > 1)
+	{
+		return x * fakulteat(x-1);
+	}
+	else
+	{
+		return 1;
+	}
+}
+

@@ -1,13 +1,16 @@
 # KonzepteSystemnaherProgrammierung
 
 gcc -g -Wall -std=c99 -pedantic
+gcc -g -Wall -std=c99 -pedantic -I../bigint/build/include -L../bigint/build/lib njvm.c -lbigint
 
 Questions: Bei vergleichsoperatoren das Ergebniss als einfaches value auf den stack legen?
            Immer checken ob objRef oder number?
 
-PushObject PopObject
+           not too sure about objRef *variable_memory ( if pointer is correct)
 
-PushValue PopValue
+           Modulo mit BigInt Bib?
+
+           Div Remainder beachten?
 
 Aufgabe 0: finished
 
@@ -21,7 +24,7 @@ Aufgabe 4: finished
 
 Aufgabe 5: finished
 
-Aufgabe 6:
+Aufgabe 6: still missing
 
 Aufgabe 7:
 
