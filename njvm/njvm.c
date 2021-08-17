@@ -113,9 +113,10 @@ void load_programm_from_File(char *programm_path)
     if(fread( &variable_count, sizeof(int), 1, file_managment) != 1) { printf("Error, noob"); exit(99); }
     variable_memory_size = variable_count;
     //Allocate memory for variables
-    ObjRef temp_variable_memory= malloc((sizeof(int)+sizeof(unsigned int)) * variable_count);
+    //ObjRef temp_variable_memory= malloc((sizeof(int)+sizeof(unsigned int)) * variable_count);
+    ObjRef *temp_variable_memory =(ObjRef*) malloc((sizeof(ObjRef) * variable_count));
     if(temp_variable_memory == NULL) { printf("Error while allocating variable memory"); exit(99); } 
-    variable_memory = &temp_variable_memory;
+    variable_memory = temp_variable_memory;
 
     //Load instructions into programm_memory
     if(fread( &programm_memory[0], sizeof(int), instruction_count, file_managment) != instruction_count) { printf("Error, noob"); exit(99); }
@@ -156,7 +157,6 @@ void execute_instruction(unsigned int instruction)
             break;
         
         case ADD:
-            //stack[stackpointer-2] = PushObject(PopObject(stackpointer-2) + PopObject(stackpointer-1));
             bip.op1 = stack[stackpointer-2].u.objRef;
             bip.op2 = stack[stackpointer-1].u.objRef;
             bigAdd();
@@ -166,7 +166,6 @@ void execute_instruction(unsigned int instruction)
             break;
    
         case SUB:
-            //stack[stackpointer-2] = PushObject(PopObject(stackpointer-2) - PopObject(stackpointer-1));
             bip.op1 = stack[stackpointer-2].u.objRef;
             bip.op2 = stack[stackpointer-1].u.objRef;
             bigSub();
@@ -176,7 +175,6 @@ void execute_instruction(unsigned int instruction)
             break;
     
         case MUL:
-            //stack[stackpointer-2] = PushObject(PopObject(stackpointer-2) * PopObject(stackpointer-1));
             bip.op1 = stack[stackpointer-2].u.objRef;
             bip.op2 = stack[stackpointer-1].u.objRef;
             bigMul();
@@ -188,7 +186,6 @@ void execute_instruction(unsigned int instruction)
         case DIV:
             if((*(int *)(stack[stackpointer-1].u.objRef->data) !=0))
             {
-                //stack[stackpointer-2] = PushObject(PopObject(stackpointer-2) / PopObject(stackpointer-1));
                 bip.op1 = stack[stackpointer-2].u.objRef;
                 bip.op2 = stack[stackpointer-1].u.objRef;
                 bigDiv();
@@ -210,9 +207,7 @@ void execute_instruction(unsigned int instruction)
             break;
     */
         case RDINT: ;
-            //int scanned_num;
             printf("Enter Integer: ");
-            //scanf("%d",&scanned_num);
             bigRead(stdin);
             stack[stackpointer] = PushObjectRef(bip.res);
             stackpointer++;
@@ -221,15 +216,12 @@ void execute_instruction(unsigned int instruction)
         case WRINT:
             bip.op1 = PopObjectRef(stackpointer-1);
             bigPrint(stdout);
-            //printf("%d",PopObject(stackpointer-1));
             stack[stackpointer-1] = PushValue(-99);
             stackpointer--;
             break;
     
         case RDCHR: ;
-            //char scanned_char;
             printf("Enter Char: ");
-            //scanf(" %c",&scanned_char);
             bigRead(stdin);
             stack[stackpointer] = PushObjectRef(bip.res);
             stackpointer++;
@@ -244,18 +236,11 @@ void execute_instruction(unsigned int instruction)
         
         case PUSHG:
             stack[stackpointer] = PushObjectRef(variable_memory[immediate]);
-            //stack[stackpointer] = PushObject(*(int *)variable_memory[immediate].data);
             stackpointer++;
             break;
     
-        case POPG: ;
-            //ObjRef objref = malloc(sizeof(unsigned int)+ sizeof(int));
-            //objref->size = sizeof(int);
-            //*(int *)objref->data = PopObject(stackpointer-1);
+        case POPG:
             variable_memory[immediate] = PopObjectRef(stackpointer-1);
-            bip.op1 = variable_memory [immediate];
-            bigPrint(stdout);
-            //variable_memory[immediate] = *objref;
             stack[stackpointer-1] = PushValue(-99);
             stackpointer--;
             break;
@@ -276,13 +261,11 @@ void execute_instruction(unsigned int instruction)
         
         case PUSHL:
             stack[stackpointer] = stack[framepointer+immediate];
-            //stack[stackpointer] = PushObject(PopObject(framepointer+immediate));
             stackpointer++;
             break;
         
         case POPL:
             stack[framepointer+immediate] = stack[stackpointer-1];
-            //stack[framepointer+immediate] = PushObject(PopObject(stackpointer-1));
             stackpointer--;
             break;
 
@@ -421,12 +404,10 @@ void execute_instruction(unsigned int instruction)
         
         case PUSHR:
             stack[stackpointer] = PushObjectRef(return_value_register);
-            //stack[stackpointer] = PushObject(*(int *)return_value_register->data);
             stackpointer++;
             break;
         
         case POPR:
-            //*(int *)return_value_register->data = PopObject(stackpointer-1);
             return_value_register = PopObjectRef(stackpointer-1);
             stack[stackpointer-1] = PushValue(-99);
             stackpointer--;
@@ -487,14 +468,11 @@ void print_stack()
 void print_static_data()
 {
     printf("--Static data--\n");
-    //ONLY DEBUG THAT i = 1 (i < variable_memory_size)
-    for(int i=0;i <1;i++)
+    for(int i=0;(i < variable_memory_size);i++)
     {
         bip.op1 = variable_memory[i];
-        bigPrint(stdout);
-        
-        printf("data[%d]:%d",i, bigToInt());
-        //bigPrint(stdout);
+        if(bip.op1 == NULL) { printf("data[%d]:%d",i, 0); }
+        else { printf("data[%d]:%d",i, bigToInt()); }
         printf("\n");
     }
     printf("--End of static data--\n\n");

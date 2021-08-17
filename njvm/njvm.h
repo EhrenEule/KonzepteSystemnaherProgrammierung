@@ -4,7 +4,7 @@
 #include <stdio.h>
 
 
-#define VERSION 3
+#define VERSION 4
 
 #define HALT 0
 #define PUSHC 1
