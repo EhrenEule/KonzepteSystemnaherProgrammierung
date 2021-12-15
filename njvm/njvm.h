@@ -4,7 +4,7 @@
 #include <stdio.h>
 
 
-#define VERSION 4
+#define VERSION 7 
 
 #define HALT 0
 #define PUSHC 1
@@ -38,9 +38,25 @@
 #define PUSHR 29
 #define POPR 30
 #define DUP 31
+#define NEW 32
+#define GETF 33
+#define PUTF 34
+#define NEWA 35
+#define GETFA 36
+#define PUTFA 37
+#define GETSZ 38
+#define PUSHN 39
+#define REFEQ 40
+#define REFNE 41
 
 #define IMMEDIATE(x) ((x) & 0x00FFFFFF)
 #define SIGN_EXTEND(i) ((i) & 0x00800000 ? (i) | 0xFF000000 : (i))
+
+#define MSB (1 << (8 * sizeof(unsigned int) - 1))
+#define IS_PRIM(objRef) ((( objRef)->size & MSB) == 0)
+#define GET_SIZE(objRef) ((objRef)->size & ~MSB)
+#define GET_REFS(objRef) ((ObjRef *)(objRef)->data)
+
 
 //isObjRef = 1 für true
 typedef struct 
@@ -67,10 +83,6 @@ _Bool debug_menu();
 
 void print_static_data();
 
-//Stackslot PushObject(int value);
-
-//int PopObject(int local_stackpointer);
-
 Stackslot PushValue(int value);
 
 int PopValue(int local_stackpointer);
@@ -78,5 +90,9 @@ int PopValue(int local_stackpointer);
 Stackslot PushObjectRef(ObjRef objref);
 
 ObjRef PopObjectRef(int local_stackpointer);
+
+ObjRef newPrimitiveObject(int numBytes);
+
+ObjRef newCompoundObject(int numObjRefs);
 
 #endif

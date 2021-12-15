@@ -48,6 +48,11 @@ int main(int argc, char *argv[]) {
         load_programm_from_File(relative_programm_path);
         halt=false;
     }
+    else if(strstr(argv[1], "home"))
+    {
+        load_programm_from_File(argv[1]);
+        halt=false;
+    }
     else if(argv[1] != NULL)
     {
         printf("unknown command line argument '%s', try './njvm --help'\n", argv[1]);
@@ -113,10 +118,15 @@ void load_programm_from_File(char *programm_path)
     if(fread( &variable_count, sizeof(int), 1, file_managment) != 1) { printf("Error, noob"); exit(99); }
     variable_memory_size = variable_count;
     //Allocate memory for variables
-    //ObjRef temp_variable_memory= malloc((sizeof(int)+sizeof(unsigned int)) * variable_count);
     ObjRef *temp_variable_memory =(ObjRef*) malloc((sizeof(ObjRef) * variable_count));
     if(temp_variable_memory == NULL) { printf("Error while allocating variable memory"); exit(99); } 
     variable_memory = temp_variable_memory;
+
+    //initialise gobal_variable_memory with nil
+    for(int i=0;i< variable_count;i++)
+    {
+        variable_memory[i] = NULL;
+    }
 
     //Load instructions into programm_memory
     if(fread( &programm_memory[0], sizeof(int), instruction_count, file_managment) != instruction_count) { printf("Error, noob"); exit(99); }
@@ -199,13 +209,23 @@ void execute_instruction(unsigned int instruction)
                 exit(1);
             }
             break;
-        //Fehlt noch
-     /*   case MOD: ;
-            stack[stackpointer-2] = PushObject(PopObject(stackpointer-2) * PopObject(stackpointer-1));
+     // Not tested yet
+        case MOD: ;
+            bip.op1 = stack[stackpointer-2].u.objRef;
+            int mod1 = bigToInt();
+            bip.op1 = stack[stackpointer-1].u.objRef;
+            int mod2 = bigToInt();
+            if((mod2 = 0))
+            {
+                printf("Cant use Module with 0");
+                exit(99);
+            }
+            bigFromInt(mod1%mod2);
+            stack[stackpointer-2] = PushObjectRef(bip.res);
             stack[stackpointer-1] = PushValue(-99);
-            stackpointer--;
             break;
-    */
+            
+
         case RDINT: ;
             printf("Enter Integer: ");
             bigRead(stdin);
@@ -416,6 +436,118 @@ void execute_instruction(unsigned int instruction)
         case DUP:
             stack[stackpointer] = stack[stackpointer-1];
             stackpointer++;
+            break;
+
+        case NEW:
+            stack[stackpointer] = PushObjectRef(newCompoundObject(immediate));
+            for(int i=0; i < GET_SIZE(PopObjectRef(stackpointer)); i++)
+            {
+                GET_REFS(PopObjectRef(stackpointer))[i] = NULL;
+            } 
+            stackpointer++;
+            break;
+        
+        case GETF:
+            //Vorher glaube DUp aufrufen, da sonst Object vom Stack verschwindet
+            if((!IS_PRIM(PopObjectRef(stackpointer-1))) && (immediate < GET_SIZE(PopObjectRef(stackpointer-1))))
+            {
+                stack[stackpointer-1] = PushObjectRef(GET_REFS(PopObjectRef(stackpointer-1))[immediate]);
+            }
+            else 
+            {
+                printf("Error while GETF, noob");
+                exit(99);
+            }
+            break;
+
+        case PUTF:
+            //Auch hier denke noch Dup vorher
+            if((!IS_PRIM(PopObjectRef(stackpointer-2))) && (IS_PRIM(PopObjectRef(stackpointer-1))) && (immediate < GET_SIZE(PopObjectRef(stackpointer-2))))
+            {
+                GET_REFS(PopObjectRef(stackpointer-2))[immediate] = PopObjectRef(stackpointer-1);
+                stack[stackpointer-2] = PushValue(-99);
+                stack[stackpointer-1] = PushValue(-99);
+                stackpointer=stackpointer-2;
+            }
+            else
+            {
+                printf("Error while PUTF, noob");
+                exit(99);
+            }
+            break;
+
+        case NEWA: ;
+            ObjRef objref = newCompoundObject(*(int *)stack[stackpointer-1].u.objRef->data);
+            for( int i=0; i < objref->size;i++)
+            {
+                GET_REFS(objref)[i] = NULL;
+            }
+            stack[stackpointer-1] = PushObjectRef(objref);
+            break;
+
+        case GETFA:
+            if((!IS_PRIM(PopObjectRef(stackpointer-2))) && (IS_PRIM(PopObjectRef(stackpointer-1))) )
+            {
+                int index =*(int *) PopObjectRef(stackpointer-1)->data;
+                ObjRef obj = GET_REFS(PopObjectRef(stackpointer-2))[index];
+                stack[stackpointer-2] = PushObjectRef(obj);
+                stack[stackpointer-1] = PushValue(-99);
+                stackpointer--;
+            }
+            break;
+
+        case PUTFA: ;
+            int index =*(int *) PopObjectRef(stackpointer-2)->data;
+            GET_REFS(PopObjectRef(stackpointer-3))[index] = PopObjectRef(stackpointer-2);
+            stack[stackpointer-3] = PushValue(-99);
+            stack[stackpointer-2] = PushValue(-99);
+            stack[stackpointer-1] = PushValue(-99);
+            stackpointer = stackpointer-3;
+            break;
+
+        case GETSZ:
+            if(!IS_PRIM(PopObjectRef(stackpointer-1)))
+            {
+                stack[stackpointer-1] = PushValue(GET_SIZE(PopObjectRef(stackpointer-1)));
+            }
+            else 
+            {
+                stack[stackpointer-1] = PushValue(-1);
+            }
+            break;
+
+        case PUSHN:
+            stack[stackpointer].u.objRef = NULL;
+            break;
+
+        case REFEQ:
+            if((stack[stackpointer-1].isObjRef == stack[stackpointer-2].isObjRef) && 
+                (stack[stackpointer-1].u.number = stack[stackpointer-2].u.number) &&
+                (stack[stackpointer-1].u.objRef->data && stack[stackpointer-2].u.objRef->data) &&
+                stack[stackpointer-1].u.objRef->size && stack[stackpointer-2].u.objRef->size)
+            {
+                stack[stackpointer-2] = PushValue(1);
+            }
+            else {
+                stack[stackpointer-2] = PushValue(0);
+            }
+                stack[stackpointer-1] = PushValue(-99);
+                stackpointer--;
+            break;
+
+        case REFNE:
+            if(!((stack[stackpointer-1].isObjRef == stack[stackpointer-2].isObjRef) && 
+                (stack[stackpointer-1].u.number = stack[stackpointer-2].u.number) &&
+                (stack[stackpointer-1].u.objRef->data && stack[stackpointer-2].u.objRef->data) &&
+                stack[stackpointer-1].u.objRef->size && stack[stackpointer-2].u.objRef->size))
+            {
+                stack[stackpointer-2] = PushValue(1);
+            }
+            else {
+                stack[stackpointer-2] = PushValue(0);
+            }
+                stack[stackpointer-1] = PushValue(-99);
+                stackpointer--;
             break;
         
         default:
@@ -658,7 +790,47 @@ void print_instruction(int number,unsigned int instruction)
                 break;
 
             case DUP:
-                printf("%d:\tge\t\n", number);
+                printf("%d:\tdup\t\n", number);
+                break; 
+
+            case NEW:
+                printf("%d:\tnew\t%d\n", number,immediate);
+                break;
+            
+            case GETF:
+                printf("%d:\tgetf\t%d\n", number,immediate);
+                break;
+            
+            case PUTF:
+                printf("%d:\tputf\t%d\n", number,immediate);
+                break;
+            
+            case NEWA:
+                printf("%d:\tnewa\t\n", number);
+                break; 
+
+            case GETFA:
+                printf("%d:\tgetfa\t\n", number);
+                break; 
+
+            case PUTFA:
+                printf("%d:\tputfa\t\n", number);
+                break; 
+
+            case GETSZ:
+                printf("%d:\tgetsz\t\n", number);
+                break; 
+
+            case PUSHN:
+                printf("%d:\tpushn\t\n", number);
+                break; 
+
+            case REFEQ:
+                printf("%d:\trefeq\t\n", number);
+                break; 
+
+            case REFNE:
+                printf("%d:\trefne\t\n", number);
                 break; 
 
             default:
@@ -724,5 +896,18 @@ ObjRef newPrimObject(int dataSize)
 void fatalError(char *msg) {
   printf("Fatal error: %s\n", msg);
   exit(1);
+}
+
+ObjRef newCompoundObject(int numObjRefs)
+{
+    ObjRef objref;
+    objref = malloc(sizeof(unsigned int) + ( numObjRefs * sizeof(void *)));
+    if(objref == NULL)
+    {
+        fatalError("New CompoundObject() got no memory");
+    }
+    objref->size = numObjRefs;
+    objref->size |= 1UL << (8 * sizeof(unsigned int) - 1);
+    return objref;
 }
 
