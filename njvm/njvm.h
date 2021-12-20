@@ -48,6 +48,7 @@
 #define PUSHN 39
 #define REFEQ 40
 #define REFNE 41
+#define MyNull 577
 
 #define IMMEDIATE(x) ((x) & 0x00FFFFFF)
 #define SIGN_EXTEND(i) ((i) & 0x00800000 ? (i) | 0xFF000000 : (i))
@@ -84,6 +85,8 @@ _Bool debug_menu();
 void print_static_data();
 
 Stackslot PushValue(int value);
+
+Stackslot PushNil();
 
 int PopValue(int local_stackpointer);
 

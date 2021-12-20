@@ -142,7 +142,7 @@ void load_programm_from_File(char *programm_path)
     //Initialise Stack with -99 Objects
     for(int i=0; i< (sizeof(stack)/ sizeof(stack[0])); i++)
     {
-        stack[i]= PushValue(-99);
+        stack[i]= PushNil();
     }
 
     fclose(file_managment);
@@ -171,7 +171,7 @@ void execute_instruction(unsigned int instruction)
             bip.op2 = stack[stackpointer-1].u.objRef;
             bigAdd();
             stack[stackpointer-2] = PushObjectRef(bip.res);
-            stack[stackpointer-1] = PushValue(-99);
+            stack[stackpointer-1] = PushNil();
             stackpointer--;
             break;
    
@@ -180,7 +180,7 @@ void execute_instruction(unsigned int instruction)
             bip.op2 = stack[stackpointer-1].u.objRef;
             bigSub();
             stack[stackpointer-2] = PushObjectRef(bip.res);
-            stack[stackpointer-1] = PushValue(-99);
+            stack[stackpointer-1] =PushNil();
             stackpointer--;
             break;
     
@@ -189,7 +189,7 @@ void execute_instruction(unsigned int instruction)
             bip.op2 = stack[stackpointer-1].u.objRef;
             bigMul();
             stack[stackpointer-2] = PushObjectRef(bip.res);
-            stack[stackpointer-1] = PushValue(-99);
+            stack[stackpointer-1] = PushNil();
             stackpointer--;
             break;
     
@@ -200,7 +200,7 @@ void execute_instruction(unsigned int instruction)
                 bip.op2 = stack[stackpointer-1].u.objRef;
                 bigDiv();
                 stack[stackpointer-2] = PushObjectRef(bip.res);
-                stack[stackpointer-1] = PushValue(-99);
+                stack[stackpointer-1] = PushNil();
                 stackpointer--;
             }
             else
@@ -222,7 +222,7 @@ void execute_instruction(unsigned int instruction)
             }
             bigFromInt(mod1%mod2);
             stack[stackpointer-2] = PushObjectRef(bip.res);
-            stack[stackpointer-1] = PushValue(-99);
+            stack[stackpointer-1] = PushNil();
             break;
             
 
@@ -236,7 +236,7 @@ void execute_instruction(unsigned int instruction)
         case WRINT:
             bip.op1 = PopObjectRef(stackpointer-1);
             bigPrint(stdout);
-            stack[stackpointer-1] = PushValue(-99);
+            stack[stackpointer-1] = PushNil();
             stackpointer--;
             break;
     
@@ -250,7 +250,7 @@ void execute_instruction(unsigned int instruction)
         case WRCHR:
             bip.op1 = PopObjectRef(stackpointer-1);
             printf("%c",bigToInt());
-            stack[stackpointer-1] = PushValue(-99);
+            stack[stackpointer-1] = PushNil();
             stackpointer--;
             break;
         
@@ -261,7 +261,7 @@ void execute_instruction(unsigned int instruction)
     
         case POPG:
             variable_memory[immediate] = PopObjectRef(stackpointer-1);
-            stack[stackpointer-1] = PushValue(-99);
+            stack[stackpointer-1] = PushNil();
             stackpointer--;
             break;
         
@@ -275,7 +275,7 @@ void execute_instruction(unsigned int instruction)
         case RSF:
             stackpointer = framepointer;
             framepointer = PopValue(stackpointer-1);
-            stack[stackpointer-1] = PushValue(-99);
+            stack[stackpointer-1] = PushNil();
             stackpointer--;
             break;
         
@@ -301,7 +301,7 @@ void execute_instruction(unsigned int instruction)
             {
                 stack[stackpointer-2] = PushValue(0);
             }
-            stack[stackpointer-1] = PushValue(-99);
+            stack[stackpointer-1] = PushNil();
             stackpointer--;
             break;
 
@@ -317,7 +317,7 @@ void execute_instruction(unsigned int instruction)
             {
                 stack[stackpointer-2] = PushValue(0);
             }
-            stack[stackpointer-1] = PushValue(-99);
+            stack[stackpointer-1] = PushNil();
             stackpointer--;
             break;
 
@@ -334,7 +334,7 @@ void execute_instruction(unsigned int instruction)
             {
                 stack[stackpointer-2] = PushValue(0);
             }
-            stack[stackpointer-1] = PushValue(-99);
+            stack[stackpointer-1] = PushNil();
             stackpointer--;
             break;
 
@@ -350,7 +350,7 @@ void execute_instruction(unsigned int instruction)
             {   
                 stack[stackpointer-2] = PushValue(0);
             }
-            stack[stackpointer-1] = PushValue(-99);
+            stack[stackpointer-1] = PushNil();
             stackpointer--;
             break;
 
@@ -366,7 +366,7 @@ void execute_instruction(unsigned int instruction)
             {
                 stack[stackpointer-2] = PushValue(0);
             }
-            stack[stackpointer-1] = PushValue(-99);
+            stack[stackpointer-1] = PushNil();
             stackpointer--;
             break;
 
@@ -382,7 +382,7 @@ void execute_instruction(unsigned int instruction)
             {
                 stack[stackpointer-2] = PushValue(0);
             }
-            stack[stackpointer-1] = PushValue(-99);
+            stack[stackpointer-1] = PushNil();
             stackpointer--;
             break;
 
@@ -392,13 +392,13 @@ void execute_instruction(unsigned int instruction)
 
         case BRF:
             if(stack[stackpointer-1].u.number == 0) { programm_counter = immediate; }
-            stack[stackpointer-1] = PushValue(-99);
+            stack[stackpointer-1] = PushNil();
             stackpointer--;
             break;
 
         case BRT:
             if(stack[stackpointer-1].u.number == 1) { programm_counter = immediate; } 
-            stack[stackpointer-1] = PushValue(-99);
+            stack[stackpointer-1] = PushNil();
             stackpointer--;
             break;
 
@@ -410,14 +410,14 @@ void execute_instruction(unsigned int instruction)
         
         case RET:
             programm_counter = PopValue(stackpointer-1);
-            stack[stackpointer-1] = PushValue(-99); 
+            stack[stackpointer-1] = PushNil(); 
             stackpointer--;
             break;
         
         case DROP:
             for(int i=0;i < immediate;i++) 
             { 
-                stack[stackpointer-1] = PushValue(-99);
+                stack[stackpointer-1] = PushNil();
             }
             stackpointer= stackpointer - immediate;
             break;
@@ -429,7 +429,7 @@ void execute_instruction(unsigned int instruction)
         
         case POPR:
             return_value_register = PopObjectRef(stackpointer-1);
-            stack[stackpointer-1] = PushValue(-99);
+            stack[stackpointer-1] = PushNil();
             stackpointer--;
             break;
         
@@ -448,7 +448,6 @@ void execute_instruction(unsigned int instruction)
             break;
         
         case GETF:
-            //Vorher glaube DUp aufrufen, da sonst Object vom Stack verschwindet
             if((!IS_PRIM(PopObjectRef(stackpointer-1))) && (immediate < GET_SIZE(PopObjectRef(stackpointer-1))))
             {
                 stack[stackpointer-1] = PushObjectRef(GET_REFS(PopObjectRef(stackpointer-1))[immediate]);
@@ -461,12 +460,13 @@ void execute_instruction(unsigned int instruction)
             break;
 
         case PUTF:
-            //Auch hier denke noch Dup vorher
-            if((!IS_PRIM(PopObjectRef(stackpointer-2))) && (IS_PRIM(PopObjectRef(stackpointer-1))) && (immediate < GET_SIZE(PopObjectRef(stackpointer-2))))
+            // Hier fehler bei PopObjectRef
+            //if((!IS_PRIM(PopObjectRef(stackpointer-2))) && (IS_PRIM(PopObjectRef(stackpointer-1))) && (immediate < GET_SIZE(PopObjectRef(stackpointer-2))))
+            if((!IS_PRIM(PopObjectRef(stackpointer-2))) && (immediate < GET_SIZE(PopObjectRef(stackpointer-2))))
             {
                 GET_REFS(PopObjectRef(stackpointer-2))[immediate] = PopObjectRef(stackpointer-1);
-                stack[stackpointer-2] = PushValue(-99);
-                stack[stackpointer-1] = PushValue(-99);
+                stack[stackpointer-2] = PushNil();
+                stack[stackpointer-1] = PushNil();
                 stackpointer=stackpointer-2;
             }
             else
@@ -491,7 +491,7 @@ void execute_instruction(unsigned int instruction)
                 int index =*(int *) PopObjectRef(stackpointer-1)->data;
                 ObjRef obj = GET_REFS(PopObjectRef(stackpointer-2))[index];
                 stack[stackpointer-2] = PushObjectRef(obj);
-                stack[stackpointer-1] = PushValue(-99);
+                stack[stackpointer-1] = PushNil();
                 stackpointer--;
             }
             break;
@@ -499,9 +499,9 @@ void execute_instruction(unsigned int instruction)
         case PUTFA: ;
             int index =*(int *) PopObjectRef(stackpointer-2)->data;
             GET_REFS(PopObjectRef(stackpointer-3))[index] = PopObjectRef(stackpointer-2);
-            stack[stackpointer-3] = PushValue(-99);
-            stack[stackpointer-2] = PushValue(-99);
-            stack[stackpointer-1] = PushValue(-99);
+            stack[stackpointer-3] = PushNil();
+            stack[stackpointer-2] = PushNil();
+            stack[stackpointer-1] = PushNil();
             stackpointer = stackpointer-3;
             break;
 
@@ -517,7 +517,8 @@ void execute_instruction(unsigned int instruction)
             break;
 
         case PUSHN:
-            stack[stackpointer].u.objRef = NULL;
+            stack[stackpointer] = PushNil();
+            stackpointer++;
             break;
 
         case REFEQ:
@@ -531,7 +532,7 @@ void execute_instruction(unsigned int instruction)
             else {
                 stack[stackpointer-2] = PushValue(0);
             }
-                stack[stackpointer-1] = PushValue(-99);
+                stack[stackpointer-1] = PushNil();
                 stackpointer--;
             break;
 
@@ -546,7 +547,7 @@ void execute_instruction(unsigned int instruction)
             else {
                 stack[stackpointer-2] = PushValue(0);
             }
-                stack[stackpointer-1] = PushValue(-99);
+                stack[stackpointer-1] = PushNil();
                 stackpointer--;
             break;
         
@@ -572,8 +573,17 @@ void print_stack()
     for(int i=(sizeof(stack)/sizeof(stack[0])-1);i >= 0 ; i--)
     {
         if(i <= stackpointer)
-        {
-            if(stack[i].isObjRef == 1)
+        {   
+            if((stack[i].isObjRef == 1) && (stack[i].u.objRef == NULL))
+            {
+                if(i == framepointer && i == stackpointer) 
+                { printf("sp,fp-->"); printf("\t[%d]\tnil (obj)\n",i); }
+                else if(i == framepointer) 
+                { printf("fp-->"); printf("\t[%d]\tnil (obj)\n",i); }
+                else if(i== stackpointer) { printf("sp-->\t[%d]\txxx\n",i); }
+                else { printf("\t[%d]\tnil (obj)\n",i); }
+            }
+            else if(stack[i].isObjRef == 1)
             {
                 if(i == framepointer && i == stackpointer) 
                 { printf("sp,fp-->"); printf("\t[%d]\t%p (obj)\n",i,(void *)&(stack[i].u.objRef)); }
@@ -843,6 +853,13 @@ Stackslot PushObjectRef(ObjRef objref)
     Stackslot stackobj;
     stackobj.isObjRef = 1;
     stackobj.u.objRef = objref;
+    return stackobj;
+}
+Stackslot PushNil()
+{
+    Stackslot stackobj;
+    stackobj.isObjRef =1;
+    stackobj.u.objRef = NULL;
     return stackobj;
 }
 
