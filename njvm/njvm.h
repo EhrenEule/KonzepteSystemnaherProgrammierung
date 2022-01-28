@@ -56,7 +56,7 @@
 #define MSB (1 << (8 * sizeof(unsigned int) - 1))
 #define IS_PRIM(objRef) ((( objRef)->size & MSB) == 0)
 #define GET_SIZE(objRef) ((objRef)->size & ~MSB)
-#define GET_REFS(objRef) ((ObjRef *)(objRef)->data)
+#define GET_REFS(objRef) ((ObjRef *)&(objRef)->data[0])
 
 
 //isObjRef = 1 für true

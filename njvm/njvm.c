@@ -153,7 +153,6 @@ void execute_instruction(unsigned int instruction)
     unsigned char opcode = instruction >> 24;
     int immediate = IMMEDIATE(instruction);
     immediate = SIGN_EXTEND(immediate);
-
     switch(opcode)
     {
         case HALT:
@@ -194,7 +193,10 @@ void execute_instruction(unsigned int instruction)
             break;
     
         case DIV:
-            if((*(int *)(stack[stackpointer-1].u.objRef->data) !=0))
+            bip.op1 =stack[stackpointer-1].u.objRef;
+            int numbernotnull = bigToInt();
+            //if((*(int *)(stack[stackpointer-1].u.objRef->data) !=0))
+            if(numbernotnull != 0)
             {
                 bip.op1 = stack[stackpointer-2].u.objRef;
                 bip.op2 = stack[stackpointer-1].u.objRef;
@@ -209,13 +211,13 @@ void execute_instruction(unsigned int instruction)
                 exit(1);
             }
             break;
-     // Not tested yet
-        case MOD: ;
+
+        case MOD: ; 
             bip.op1 = stack[stackpointer-2].u.objRef;
             int mod1 = bigToInt();
             bip.op1 = stack[stackpointer-1].u.objRef;
             int mod2 = bigToInt();
-            if((mod2 = 0))
+            if((mod2 == 0))
             {
                 printf("Cant use Module with 0");
                 exit(99);
@@ -223,6 +225,7 @@ void execute_instruction(unsigned int instruction)
             bigFromInt(mod1%mod2);
             stack[stackpointer-2] = PushObjectRef(bip.res);
             stack[stackpointer-1] = PushNil();
+            stackpointer--;
             break;
             
 
@@ -295,11 +298,15 @@ void execute_instruction(unsigned int instruction)
 
             if( bigCmp() == 0 )
             {
-                stack[stackpointer-2] = PushValue(1);
+                //stack[stackpointer-2] = PushValue(1);
+                bigFromInt(1);
+                stack[stackpointer-2] = PushObjectRef(bip.res);
             }
             else
             {
-                stack[stackpointer-2] = PushValue(0);
+                //stack[stackpointer-2] = PushValue(0);
+                bigFromInt(0);
+                stack[stackpointer-2] = PushObjectRef(bip.res);
             }
             stack[stackpointer-1] = PushNil();
             stackpointer--;
@@ -311,11 +318,15 @@ void execute_instruction(unsigned int instruction)
             
             if( bigCmp() != 0 )
             {
-                stack[stackpointer-2] = PushValue(1);
+                //stack[stackpointer-2] = PushValue(1);
+                bigFromInt(1);
+                stack[stackpointer-2] = PushObjectRef(bip.res);
             }
             else
             {
-                stack[stackpointer-2] = PushValue(0);
+                //stack[stackpointer-2] = PushValue(0);
+                bigFromInt(0);
+                stack[stackpointer-2] = PushObjectRef(bip.res);
             }
             stack[stackpointer-1] = PushNil();
             stackpointer--;
@@ -328,11 +339,15 @@ void execute_instruction(unsigned int instruction)
             
             if( bigCmp() < 0 )
             {
-                stack[stackpointer-2] = PushValue(1);
+                //stack[stackpointer-2] = PushValue(1);
+                bigFromInt(1);
+                stack[stackpointer-2] = PushObjectRef(bip.res);
             }
             else
             {
-                stack[stackpointer-2] = PushValue(0);
+               // stack[stackpointer-2] = PushValue(0);
+               bigFromInt(0);
+                stack[stackpointer-2] = PushObjectRef(bip.res);
             }
             stack[stackpointer-1] = PushNil();
             stackpointer--;
@@ -344,11 +359,15 @@ void execute_instruction(unsigned int instruction)
             
             if( bigCmp() <=0 )
             {
-                stack[stackpointer-2] = PushValue(1);
+                //stack[stackpointer-2] = PushValue(1);
+                bigFromInt(1);
+                stack[stackpointer-2] = PushObjectRef(bip.res);
             }
             else
             {   
-                stack[stackpointer-2] = PushValue(0);
+                //stack[stackpointer-2] = PushValue(0);
+                bigFromInt(0);
+                stack[stackpointer-2] = PushObjectRef(bip.res);
             }
             stack[stackpointer-1] = PushNil();
             stackpointer--;
@@ -360,11 +379,15 @@ void execute_instruction(unsigned int instruction)
             
             if( bigCmp() > 0) 
             {
-                stack[stackpointer-2] = PushValue(1);
+                //stack[stackpointer-2] = PushValue(1);
+                bigFromInt(1);
+                stack[stackpointer-2] = PushObjectRef(bip.res);
             }
             else
             {
-                stack[stackpointer-2] = PushValue(0);
+                //stack[stackpointer-2] = PushValue(0);
+                bigFromInt(0);
+                stack[stackpointer-2] = PushObjectRef(bip.res);
             }
             stack[stackpointer-1] = PushNil();
             stackpointer--;
@@ -376,11 +399,15 @@ void execute_instruction(unsigned int instruction)
             
             if( bigCmp() >=0 )
             {
-                stack[stackpointer-2] = PushValue(1);
+               // stack[stackpointer-2] = PushValue(1);
+               bigFromInt(1);
+                stack[stackpointer-2] = PushObjectRef(bip.res);
             }
             else
             {
-                stack[stackpointer-2] = PushValue(0);
+                //stack[stackpointer-2] = PushValue(0);
+                bigFromInt(0);
+                stack[stackpointer-2] = PushObjectRef(bip.res);
             }
             stack[stackpointer-1] = PushNil();
             stackpointer--;
@@ -391,13 +418,20 @@ void execute_instruction(unsigned int instruction)
             break;
 
         case BRF:
-            if(stack[stackpointer-1].u.number == 0) { programm_counter = immediate; }
+            bip.op1 = stack[stackpointer-1].u.objRef;
+            int valuefalse = bigToInt();
+            //printf("%d", value)
+            //if(stack[stackpointer-1].u.number == 0) { programm_counter = immediate; }
+            if(valuefalse == 0) { programm_counter = immediate; }
             stack[stackpointer-1] = PushNil();
             stackpointer--;
             break;
 
         case BRT:
-            if(stack[stackpointer-1].u.number == 1) { programm_counter = immediate; } 
+            bip.op1 = stack[stackpointer-1].u.objRef;
+            int valuetrue = bigToInt();
+            //if(stack[stackpointer-1].u.number == 1) { programm_counter = immediate; } 
+            if(valuetrue == 1) { programm_counter = immediate; } 
             stack[stackpointer-1] = PushNil();
             stackpointer--;
             break;
@@ -450,8 +484,10 @@ void execute_instruction(unsigned int instruction)
         case GETF:
             if((!IS_PRIM(PopObjectRef(stackpointer-1))) && (immediate < GET_SIZE(PopObjectRef(stackpointer-1))))
             {
-                stack[stackpointer-1] = PushObjectRef(GET_REFS(PopObjectRef(stackpointer-1))[immediate]);
-            }
+                ObjRef CmpObj = PopObjectRef(stackpointer-1);
+                ObjRef GetFobjref = GET_REFS(CmpObj)[immediate];            
+                stack[stackpointer-1] = PushObjectRef(GetFobjref);           
+                 }
             else 
             {
                 printf("Error while GETF, noob");
@@ -460,8 +496,6 @@ void execute_instruction(unsigned int instruction)
             break;
 
         case PUTF:
-            // Hier fehler bei PopObjectRef
-            //if((!IS_PRIM(PopObjectRef(stackpointer-2))) && (IS_PRIM(PopObjectRef(stackpointer-1))) && (immediate < GET_SIZE(PopObjectRef(stackpointer-2))))
             if((!IS_PRIM(PopObjectRef(stackpointer-2))) && (immediate < GET_SIZE(PopObjectRef(stackpointer-2))))
             {
                 GET_REFS(PopObjectRef(stackpointer-2))[immediate] = PopObjectRef(stackpointer-1);
@@ -477,10 +511,13 @@ void execute_instruction(unsigned int instruction)
             break;
 
         case NEWA: ;
-            ObjRef objref = newCompoundObject(*(int *)stack[stackpointer-1].u.objRef->data);
-            for( int i=0; i < objref->size;i++)
-            {
-                GET_REFS(objref)[i] = NULL;
+            //int array_size = *(int *)stack[stackpointer-1].u.objRef->data;
+            bip.op1 = stack[stackpointer-1].u.objRef;
+            int array_size = bigToInt();
+            ObjRef objref = newCompoundObject(array_size);
+            for( int i=0; i < GET_SIZE(objref);i++)
+           {
+               GET_REFS(objref)[i] = NULL;
             }
             stack[stackpointer-1] = PushObjectRef(objref);
             break;
@@ -488,7 +525,10 @@ void execute_instruction(unsigned int instruction)
         case GETFA:
             if((!IS_PRIM(PopObjectRef(stackpointer-2))) && (IS_PRIM(PopObjectRef(stackpointer-1))) )
             {
-                int index =*(int *) PopObjectRef(stackpointer-1)->data;
+                //int index =*(int *) PopObjectRef(stackpointer-1)->data;
+                bip.op1 = PopObjectRef(stackpointer-1);
+                int index = bigToInt();
+
                 ObjRef obj = GET_REFS(PopObjectRef(stackpointer-2))[index];
                 stack[stackpointer-2] = PushObjectRef(obj);
                 stack[stackpointer-1] = PushNil();
@@ -497,8 +537,11 @@ void execute_instruction(unsigned int instruction)
             break;
 
         case PUTFA: ;
-            int index =*(int *) PopObjectRef(stackpointer-2)->data;
-            GET_REFS(PopObjectRef(stackpointer-3))[index] = PopObjectRef(stackpointer-2);
+            //int index =*(int *) PopObjectRef(stackpointer-2)->data;
+            bip.op1 = PopObjectRef(stackpointer-2);
+            int index = bigToInt();
+
+            GET_REFS(PopObjectRef(stackpointer-3))[index] = PopObjectRef(stackpointer-1);
             stack[stackpointer-3] = PushNil();
             stack[stackpointer-2] = PushNil();
             stack[stackpointer-1] = PushNil();
@@ -508,10 +551,12 @@ void execute_instruction(unsigned int instruction)
         case GETSZ:
             if(!IS_PRIM(PopObjectRef(stackpointer-1)))
             {
-                stack[stackpointer-1] = PushValue(GET_SIZE(PopObjectRef(stackpointer-1)));
+                bigFromInt(GET_SIZE(PopObjectRef(stackpointer-1)));
+                stack[stackpointer-1] = PushObjectRef(bip.res);
             }
             else 
             {
+                printf("Warning: getsize got asked for primobject");
                 stack[stackpointer-1] = PushValue(-1);
             }
             break;
@@ -522,30 +567,34 @@ void execute_instruction(unsigned int instruction)
             break;
 
         case REFEQ:
-            if((stack[stackpointer-1].isObjRef == stack[stackpointer-2].isObjRef) && 
-                (stack[stackpointer-1].u.number = stack[stackpointer-2].u.number) &&
-                (stack[stackpointer-1].u.objRef->data && stack[stackpointer-2].u.objRef->data) &&
-                stack[stackpointer-1].u.objRef->size && stack[stackpointer-2].u.objRef->size)
+            if(stack[stackpointer-1].u.objRef == stack[stackpointer-2].u.objRef)
             {
-                stack[stackpointer-2] = PushValue(1);
+                //stack[stackpointer-2] = PushValue(1);
+                bigFromInt(1);
+                stack[stackpointer-2] = PushObjectRef(bip.res);
             }
-            else {
-                stack[stackpointer-2] = PushValue(0);
+            else 
+            {
+                //stack[stackpointer-2] = PushValue(0);
+                bigFromInt(0);
+                stack[stackpointer-2] = PushObjectRef(bip.res);
             }
-                stack[stackpointer-1] = PushNil();
-                stackpointer--;
+            stack[stackpointer-1] = PushNil();
+            stackpointer--;
             break;
 
         case REFNE:
-            if(!((stack[stackpointer-1].isObjRef == stack[stackpointer-2].isObjRef) && 
-                (stack[stackpointer-1].u.number = stack[stackpointer-2].u.number) &&
-                (stack[stackpointer-1].u.objRef->data && stack[stackpointer-2].u.objRef->data) &&
-                stack[stackpointer-1].u.objRef->size && stack[stackpointer-2].u.objRef->size))
+           if(stack[stackpointer-1].u.objRef == stack[stackpointer-2].u.objRef)
             {
-                stack[stackpointer-2] = PushValue(1);
+                //stack[stackpointer-2] = PushValue(0);
+                bigFromInt(0);
+                stack[stackpointer-2] = PushObjectRef(bip.res);
             }
-            else {
-                stack[stackpointer-2] = PushValue(0);
+            else 
+            {
+                //stack[stackpointer-2] = PushValue(1);
+                bigFromInt(1);
+                stack[stackpointer-2] = PushObjectRef(bip.res);
             }
                 stack[stackpointer-1] = PushNil();
                 stackpointer--;
@@ -577,7 +626,7 @@ void print_stack()
             if((stack[i].isObjRef == 1) && (stack[i].u.objRef == NULL))
             {
                 if(i == framepointer && i == stackpointer) 
-                { printf("sp,fp-->"); printf("\t[%d]\tnil (obj)\n",i); }
+                { printf("sp,fp-->"); printf("\t[%d]\txxx\n",i); }
                 else if(i == framepointer) 
                 { printf("fp-->"); printf("\t[%d]\tnil (obj)\n",i); }
                 else if(i== stackpointer) { printf("sp-->\t[%d]\txxx\n",i); }
@@ -586,11 +635,11 @@ void print_stack()
             else if(stack[i].isObjRef == 1)
             {
                 if(i == framepointer && i == stackpointer) 
-                { printf("sp,fp-->"); printf("\t[%d]\t%p (obj)\n",i,(void *)&(stack[i].u.objRef)); }
+                { printf("sp,fp-->"); printf("\t[%d]\t%p (obj)\n",i,(void *)(stack[i].u.objRef)); }
                 else if(i == framepointer) 
-                { printf("fp-->"); printf("\t[%d]\t%p (obj)\n",i,(void *)&(stack[i].u.objRef)); }
+                { printf("fp-->"); printf("\t[%d]\t%p (obj)\n",i,(void *)(stack[i].u.objRef)); }
                 else if(i== stackpointer) { printf("sp-->\t[%d]\txxx\n",i); }
-                else { printf("\t[%d]\t%p (obj)\n",i,(void *)&(stack[i].u.objRef)); }
+                else { printf("\t[%d]\t%p (obj)\n",i,(void *)(stack[i].u.objRef)); }
             }
             else if(stack[i].isObjRef == 0)
             {
@@ -641,7 +690,26 @@ bool debug_menu()
             if(stack[object_stack_adress].isObjRef == 1)
             {
             bip.op1 = stack[object_stack_adress].u.objRef;
-            printf("Value: %d\n",bigToInt());
+                if(IS_PRIM(stack[object_stack_adress].u.objRef))
+                {
+                    printf("<Primitive Object>?\n");
+                    printf("Value: %d\n",bigToInt());
+                }
+                else
+                {
+                    printf("<Compound Object>\n");
+                    for(int i=0; i< GET_SIZE(stack[object_stack_adress].u.objRef); i++)
+                    {
+                        if(stack[object_stack_adress].u.objRef != NULL)
+                        {
+                            printf("field[%d]:\t%p\n", i, (void *)GET_REFS(stack[object_stack_adress].u.objRef)[i]);
+                        }
+                        else 
+                        {
+                            printf("field[%d]:\tnil\n",i);
+                        }
+                    }
+                }
             }
             else { printf("Is not an object!\n"); }
         }
@@ -865,9 +933,11 @@ Stackslot PushNil()
 
 ObjRef PopObjectRef(int local_stackpointer)
 {
+    ObjRef refobj;
+
     if(stack[local_stackpointer].isObjRef == 1)
     {
-        ObjRef refobj = stack[local_stackpointer].u.objRef;
+        refobj = stack[local_stackpointer].u.objRef;
         return refobj;
     }
     else
@@ -918,7 +988,7 @@ void fatalError(char *msg) {
 ObjRef newCompoundObject(int numObjRefs)
 {
     ObjRef objref;
-    objref = malloc(sizeof(unsigned int) + ( numObjRefs * sizeof(void *)));
+    objref = malloc(sizeof(*objref)+ (numObjRefs * sizeof(void *)));
     if(objref == NULL)
     {
         fatalError("New CompoundObject() got no memory");
@@ -927,4 +997,3 @@ ObjRef newCompoundObject(int numObjRefs)
     objref->size |= 1UL << (8 * sizeof(unsigned int) - 1);
     return objref;
 }
-
