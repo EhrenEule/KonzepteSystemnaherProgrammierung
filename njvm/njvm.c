@@ -17,7 +17,10 @@ ObjRef *variable_memory;
 int programm_memory_size;
 int variable_memory_size;
 unsigned int instruction;
-Stackslot stack[10000];
+
+//not too sure if size 1 makes sense
+//Stackslot stack[1];
+Stackslot *stack;
 bool halt=true;
 bool debug=false;
 int breakpoint=-10;
@@ -27,36 +30,56 @@ int framepointer;
 int programm_counter;
 ObjRef return_value_register;
 
+//variables for GC
+bool defaultStacksize = true;
 
 int main(int argc, char *argv[]) {
 
     printf("Ninja Virtual Machine started\n");
-    if(strcmp(argv[1], "--version") == 0)
+    for(int i=0; i< argc;i++)
     {
-        printf("Version: %d\n",VERSION);
+        if(strcmp(argv[i], "--version") == 0)
+        {
+           printf("Version: %d\n",VERSION);
+        }
+        else if(strcmp(argv[i], "--help") == 0)
+        {
+            printf("usage: ./njvm [option] [option] ...\n");
+            printf("  --version        show version and exit\n");
+            printf("  --help           show this help and exit\n");
+        }
+        // das program laden muss wahrscheinlich ueberarbeitet werden
+        else if(strstr(argv[i], "prog"))
+        {
+            char relative_programm_path[80] = "/home/student/Desktop/KonzepteSystemnaherProgrammierung/Tests/";
+            strncat(relative_programm_path, argv[1], strlen(argv[1]));
+            load_programm_from_File(relative_programm_path);
+            halt=false;
+        }
+        else if(strstr(argv[i], "home"))
+        {
+           load_programm_from_File(argv[1]);
+           halt=false;
+        }
+        else if(argv[i] != NULL)
+        {
+            printf("unknown command line argument '%s', try './njvm --help'\n", argv[1]);
+        }
+        else if(strstr(argv[i], "--stack"))
+        {
+            int n = atoi(argv[i+1]);
+            stack = malloc(n * 1024);
+            defaultStacksize = false;
+        }
     }
-    else if(strcmp(argv[1], "--help") == 0)
+
+    //to make stack the default size if the flag hasnt been set
+    if(defaultStacksize == true)
     {
-        printf("usage: ./njvm [option] [option] ...\n");
-        printf("  --version        show version and exit\n");
-        printf("  --help           show this help and exit\n");
+        stack = malloc(64*1024);
     }
-    else if(strstr(argv[1], "prog"))
-    {
-        char relative_programm_path[80] = "/home/student/Desktop/KonzepteSystemnaherProgrammierung/Tests/";
-        strncat(relative_programm_path, argv[1], strlen(argv[1]));
-        load_programm_from_File(relative_programm_path);
-        halt=false;
-    }
-    else if(strstr(argv[1], "home"))
-    {
-        load_programm_from_File(argv[1]);
-        halt=false;
-    }
-    else if(argv[1] != NULL)
-    {
-        printf("unknown command line argument '%s', try './njvm --help'\n", argv[1]);
-    }
+
+
     //To activate debug mode
     if((argc == 3) && (strcmp(argv[2], "--debug") == 0)){ debug=true; }
 
@@ -195,7 +218,6 @@ void execute_instruction(unsigned int instruction)
         case DIV:
             bip.op1 =stack[stackpointer-1].u.objRef;
             int numbernotnull = bigToInt();
-            //if((*(int *)(stack[stackpointer-1].u.objRef->data) !=0))
             if(numbernotnull != 0)
             {
                 bip.op1 = stack[stackpointer-2].u.objRef;
@@ -298,13 +320,11 @@ void execute_instruction(unsigned int instruction)
 
             if( bigCmp() == 0 )
             {
-                //stack[stackpointer-2] = PushValue(1);
                 bigFromInt(1);
                 stack[stackpointer-2] = PushObjectRef(bip.res);
             }
             else
             {
-                //stack[stackpointer-2] = PushValue(0);
                 bigFromInt(0);
                 stack[stackpointer-2] = PushObjectRef(bip.res);
             }
@@ -318,13 +338,11 @@ void execute_instruction(unsigned int instruction)
             
             if( bigCmp() != 0 )
             {
-                //stack[stackpointer-2] = PushValue(1);
                 bigFromInt(1);
                 stack[stackpointer-2] = PushObjectRef(bip.res);
             }
             else
             {
-                //stack[stackpointer-2] = PushValue(0);
                 bigFromInt(0);
                 stack[stackpointer-2] = PushObjectRef(bip.res);
             }
@@ -339,13 +357,11 @@ void execute_instruction(unsigned int instruction)
             
             if( bigCmp() < 0 )
             {
-                //stack[stackpointer-2] = PushValue(1);
                 bigFromInt(1);
                 stack[stackpointer-2] = PushObjectRef(bip.res);
             }
             else
             {
-               // stack[stackpointer-2] = PushValue(0);
                bigFromInt(0);
                 stack[stackpointer-2] = PushObjectRef(bip.res);
             }
@@ -359,13 +375,11 @@ void execute_instruction(unsigned int instruction)
             
             if( bigCmp() <=0 )
             {
-                //stack[stackpointer-2] = PushValue(1);
                 bigFromInt(1);
                 stack[stackpointer-2] = PushObjectRef(bip.res);
             }
             else
             {   
-                //stack[stackpointer-2] = PushValue(0);
                 bigFromInt(0);
                 stack[stackpointer-2] = PushObjectRef(bip.res);
             }
@@ -379,13 +393,11 @@ void execute_instruction(unsigned int instruction)
             
             if( bigCmp() > 0) 
             {
-                //stack[stackpointer-2] = PushValue(1);
                 bigFromInt(1);
                 stack[stackpointer-2] = PushObjectRef(bip.res);
             }
             else
             {
-                //stack[stackpointer-2] = PushValue(0);
                 bigFromInt(0);
                 stack[stackpointer-2] = PushObjectRef(bip.res);
             }
@@ -399,13 +411,11 @@ void execute_instruction(unsigned int instruction)
             
             if( bigCmp() >=0 )
             {
-               // stack[stackpointer-2] = PushValue(1);
                bigFromInt(1);
                 stack[stackpointer-2] = PushObjectRef(bip.res);
             }
             else
             {
-                //stack[stackpointer-2] = PushValue(0);
                 bigFromInt(0);
                 stack[stackpointer-2] = PushObjectRef(bip.res);
             }
@@ -420,8 +430,6 @@ void execute_instruction(unsigned int instruction)
         case BRF:
             bip.op1 = stack[stackpointer-1].u.objRef;
             int valuefalse = bigToInt();
-            //printf("%d", value)
-            //if(stack[stackpointer-1].u.number == 0) { programm_counter = immediate; }
             if(valuefalse == 0) { programm_counter = immediate; }
             stack[stackpointer-1] = PushNil();
             stackpointer--;
@@ -430,7 +438,6 @@ void execute_instruction(unsigned int instruction)
         case BRT:
             bip.op1 = stack[stackpointer-1].u.objRef;
             int valuetrue = bigToInt();
-            //if(stack[stackpointer-1].u.number == 1) { programm_counter = immediate; } 
             if(valuetrue == 1) { programm_counter = immediate; } 
             stack[stackpointer-1] = PushNil();
             stackpointer--;
@@ -511,7 +518,6 @@ void execute_instruction(unsigned int instruction)
             break;
 
         case NEWA: ;
-            //int array_size = *(int *)stack[stackpointer-1].u.objRef->data;
             bip.op1 = stack[stackpointer-1].u.objRef;
             int array_size = bigToInt();
             ObjRef objref = newCompoundObject(array_size);
@@ -525,7 +531,6 @@ void execute_instruction(unsigned int instruction)
         case GETFA:
             if((!IS_PRIM(PopObjectRef(stackpointer-2))) && (IS_PRIM(PopObjectRef(stackpointer-1))) )
             {
-                //int index =*(int *) PopObjectRef(stackpointer-1)->data;
                 bip.op1 = PopObjectRef(stackpointer-1);
                 int index = bigToInt();
 
@@ -537,7 +542,6 @@ void execute_instruction(unsigned int instruction)
             break;
 
         case PUTFA: ;
-            //int index =*(int *) PopObjectRef(stackpointer-2)->data;
             bip.op1 = PopObjectRef(stackpointer-2);
             int index = bigToInt();
 
@@ -569,13 +573,11 @@ void execute_instruction(unsigned int instruction)
         case REFEQ:
             if(stack[stackpointer-1].u.objRef == stack[stackpointer-2].u.objRef)
             {
-                //stack[stackpointer-2] = PushValue(1);
                 bigFromInt(1);
                 stack[stackpointer-2] = PushObjectRef(bip.res);
             }
             else 
             {
-                //stack[stackpointer-2] = PushValue(0);
                 bigFromInt(0);
                 stack[stackpointer-2] = PushObjectRef(bip.res);
             }
@@ -586,13 +588,11 @@ void execute_instruction(unsigned int instruction)
         case REFNE:
            if(stack[stackpointer-1].u.objRef == stack[stackpointer-2].u.objRef)
             {
-                //stack[stackpointer-2] = PushValue(0);
                 bigFromInt(0);
                 stack[stackpointer-2] = PushObjectRef(bip.res);
             }
             else 
             {
-                //stack[stackpointer-2] = PushValue(1);
                 bigFromInt(1);
                 stack[stackpointer-2] = PushObjectRef(bip.res);
             }
@@ -619,7 +619,8 @@ void print_programm()
 void print_stack()
 {
     printf("--Stack--\n");
-    for(int i=(sizeof(stack)/sizeof(stack[0])-1);i >= 0 ; i--)
+    //for(int i=(sizeof(stack)/sizeof(stack[0])-1);i >= 0 ; i--)
+    for(int i)
     {
         if(i <= stackpointer)
         {   
